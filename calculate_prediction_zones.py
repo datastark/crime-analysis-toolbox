@@ -87,7 +87,7 @@ def connect_to_layer(username, password, server_url, service_url):
 
 def main(in_features, date_field, spatial_band_size, temporal_band_size,
          probability_type, slice_num, out_raster, out_polygon,
-         pub_polys, pub_raster, pub_type,
+         pub_raster, pub_polys, pub_type,
          username, password, server_url, poly_url, *args):
 
     """ Generates a raster and series of polygons based on that raster to
@@ -95,7 +95,7 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
         in time based on defined algorithms for the decay of spatial and temporal
         influence of previous incidents.
 
-        in_features: Point feature class showign the location of incidents that
+        in_features: Point feature class showing the location of incidents that
                      have occured recently, and from which predictions will be
                      based. This feature class must have a date field and all
                      features must have date values.
@@ -204,12 +204,9 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
                                                         where_clause=where_clause)
                 dist_raster = arcpy.sa.EucDistance(incident_lyr,
                                                    spatial_band_size)
-                inc_raster = arcpy.sa.Float(dist_raster)
 
                 # Apply distance & temporal decay
-                inc_raster = arcpy.sa.Plus(inc_raster, 1)
-                inc_raster = arcpy.sa.Minus(float(spatial_band_size),
-                                            inc_raster)
+                inc_raster = (float(spatial_band_size) - (dist_raster + 1.0)) * (float(2)/float(date_diff.days +1))
 
                 # Set Null values to 0 to allow for raster math
                 null_locations = arcpy.sa.IsNull(inc_raster)
