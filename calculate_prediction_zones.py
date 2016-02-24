@@ -270,7 +270,7 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
         pub_type: Choice of publication environments- NONE, ARCGIS_ONLINE,
                   ARCGIS_PORTAL, ARCGIS_SERVER
 
-        username: administrative username for the services
+        username: administrative username for the service
 
         password: corresponding to the username
 
