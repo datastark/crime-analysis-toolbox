@@ -29,8 +29,8 @@ cur_status_field = 'MOSTRECENT'
 cur_date_field = 'CREATEDATE'
 
 # TODO: Get current date & time
-##        today = dt.today()
-today = dt.strptime("12/15/2009", "%m/%d/%Y")
+today = dt.today()
+##today = dt.strptime("12/15/2009", "%m/%d/%Y")
 
 def expand_extents(data, stretch):
     """Expand the extents of a dataset by a set distance in all directions by
