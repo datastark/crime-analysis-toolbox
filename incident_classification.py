@@ -68,8 +68,8 @@ def calculate_band(value, bands):
             return tband
 
 
-def classify_incidents(in_features, report_location, date_field,
-                       spatial_bands, temporal_bands, repeatdist=0):
+def classify_incidents(in_features, date_field, spatial_bands, temporal_bands,
+                       repeatdist=0, report_location, *args):
     """Updates an input feature class to classify features according to their
        proximity in space and time to previous incidents
 
