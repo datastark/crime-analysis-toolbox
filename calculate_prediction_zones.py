@@ -29,8 +29,9 @@ arcpy.env.overwriteOutput = True
 cur_status_field = 'MOSTRECENT'
 cur_date_field = 'CREATEDATE'
 
-# TODO: Get current date & time
+# Get current date & time
 today = dy.today()
+todaytime = dt.today()
 ##today = dt.strptime("12/15/2009", "%m/%d/%Y")
 
 def expand_extents(data, stretch):
@@ -143,6 +144,12 @@ def add_status_fields_to_lyr(lyr):
     if cur_date_field not in fields:
         arcpy.AddField_management(lyr, cur_date_field, 'DATE')
 
+    if 'gridcode' not in fields:
+        arcpy.AddField_management(lyr, 'gridcode', 'LONG')
+
+    if 'Id' not in fields:
+        arcpy.AddField_management(lyr, 'Id', 'LONG')
+
 # End of add_status_fields_to_lyr function
 
 
@@ -191,7 +198,7 @@ def convert_raster_to_zones(raster, bins, status_field, date_field):
     with arcpy.da.UpdateCursor(polys, [status_field, date_field]) as rows:
         for row in rows:
             row[0] = 'True'
-            row[1] = today
+            row[1] = todaytime
             rows.updateRow(row)
 
     return polys
@@ -225,10 +232,10 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
         in time based on defined algorithms for the decay of spatial and
         temporal influence of previous incidents.
 
-        in_features: Point feature class showing the location of incidents that
-                     have occured recently, and from which predictions will be
-                     based. This feature class must have a date field and all
-                     features must have date values.
+        in_features: Point feature class or shapefile showing the location of
+                     incidents that have occured recently, and from which
+                     predictions will be based. This feature class must have a
+                     date field and all features must have date values.
 
         date_field: Field in in_features containing the date each incident
                     occurred. Values in this field are used to calculate the
@@ -255,9 +262,8 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
                    created from the prediction raster. Each zone will represent
                    a range of prediction risk values.
 
-        out_raster: Output incident prediction surface raster. Raster name will
-                    have timestamp appended to avoid overwriting previous
-                    rasters.
+        out_raster: Location for output incident prediction surface raster.
+                    Raster name will have timestamp.
 
         out_polygon_fc: Output polygon feature class based on classifying the
                         out_raster values into slice_num categories.
@@ -324,10 +330,10 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
         sql = """{0} <= date'{1}' AND {0} >= date'{2}'""".format(date_field,
                                                                  today,
                                                                  date_min)
-
         with arcpy.da.SearchCursor(incident_fc,
                                    ['OID@', date_field],
                                    where_clause=sql) as incidents:
+            count = 0
 
             for incident in incidents:
 
@@ -351,9 +357,14 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
                 else:
                     sum_raster = calculate_max_risk(sum_raster, inc_raster)
 
+                count += 1
+
+        if not count:
+            raise Exception('No incidents found in between {} and {}'.format(date_min, today))
+
         # Save final probability raster where values are > 0
         sum_raster = arcpy.sa.SetNull(sum_raster, sum_raster, "Value <= 0")
-        sum_raster.save(''.join([out_raster,'p', now]))
+        sum_raster.save(''.join([out_raster, os.sep, 'p', now]))
 
         # Slice raster values into categories and convert to temp polys
         temp_polys = convert_raster_to_zones(sum_raster, slice_num,
@@ -362,6 +373,7 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
         # Creat polygon fc if it doesn't exist
         if not arcpy.Exists(out_polygon):
             create_zone_fc(temp_polys, sr, out_polygon)
+
 
         # Create status fields if they don't exist
         add_status_fields_to_lyr(out_polygon)
