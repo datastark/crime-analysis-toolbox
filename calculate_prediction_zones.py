@@ -12,6 +12,7 @@
 import arcpy
 
 from datetime import datetime as dt
+from datetime import date as dy
 from datetime import timedelta as td
 from os import path
 import os
@@ -29,7 +30,7 @@ cur_status_field = 'MOSTRECENT'
 cur_date_field = 'CREATEDATE'
 
 # TODO: Get current date & time
-today = dt.today()
+today = dy.today()
 ##today = dt.strptime("12/15/2009", "%m/%d/%Y")
 
 def expand_extents(data, stretch):
@@ -286,7 +287,7 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
         else:
             raise Exception("Spatial Analyst license unavailable")
 
-        now = dt.strftime(dt.now(), "%Y_%m_%d_%H_%M_%S")
+        now = dt.strftime(dt.now(), "%y%m%d%H%M%S")
 
         # Convert booleen values
         if not pub_polys == 'True':
@@ -331,7 +332,7 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
             for incident in incidents:
 
                 # Calculate age of incident
-                date_diff = today - incident[1]
+                date_diff = today - incident[1].date()
 
                 # Build float distance raster for incident
                 sql = """{} = {}""".format(oidname, incident[0])
@@ -352,7 +353,7 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
 
         # Save final probability raster where values are > 0
         sum_raster = arcpy.sa.SetNull(sum_raster, sum_raster, "Value <= 0")
-        sum_raster.save('_'.join([out_raster, now]))
+        sum_raster.save(''.join([out_raster,'p', now]))
 
         # Slice raster values into categories and convert to temp polys
         temp_polys = convert_raster_to_zones(sum_raster, slice_num,
