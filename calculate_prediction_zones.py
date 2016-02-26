@@ -32,7 +32,7 @@ cur_date_field = 'CREATEDATE'
 # Get current date & time
 today = dy.today()
 todaytime = dt.today()
-##today = dt.strptime("12/15/2009", "%m/%d/%Y")
+
 
 def expand_extents(data, stretch):
     """Expand the extents of a dataset by a set distance in all directions by
@@ -374,7 +374,6 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
         if not arcpy.Exists(out_polygon):
             create_zone_fc(temp_polys, sr, out_polygon)
 
-
         # Create status fields if they don't exist
         add_status_fields_to_lyr(out_polygon)
 
@@ -398,7 +397,10 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
             try:
                 fl = connect_to_layer(username, password, server_url, poly_url)
             except:
-                raise Exception('Could not connect to service. Please verify organization URL and service URL are correct, and the provided username and password have access to the service.')
+                raise Exception('Could not connect to service. Please verify '
+                                'organization URL and service URL are '
+                                'correct, and the provided username and '
+                                'password have access to the service.')
 
             # Check service for status and creation fields - add if necessary
             add_status_field_to_service(fl)
