@@ -1,13 +1,32 @@
 # -----------------------------------------------------------------------------
-# Name:         calculate_prediction_zones.py BETA
+# Copyright 2015 Esri
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Purpose:      Calculate a probability surface showing the liklihood of the
-#               occurance of a repeat or near repeat incident
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-# Author:       Esri., Inc.
-#
-# Created:     04/02/2016
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # -----------------------------------------------------------------------------
+
+# ==================================================
+# calculate_prediction_zones.py BETA
+# --------------------------------------------------
+# requirments: ArcGIS 10.3.1, Python 2.7 or Python 3.4
+# author: ArcGIS Solutions
+# contact: ArcGISTeamLocalGov@esri.com
+# company: Esri
+# ==================================================
+# description: Calculate a probability surface showing the liklihood of the
+#              occurance of a repeat or near repeat incident
+# ==================================================
+# history:
+# 04/02/2016 - AM - beta
+# ==================================================
 
 import arcpy
 
@@ -426,10 +445,32 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
             # Add new 'current' features
             fl.addFeatures(temp_polys)
 
-    except Exception as ex:
-        print(ex)
     except arcpy.ExecuteError:
-        print(arcpy.GetMessages(2))
+        # Get the tool error messages
+        msgs = arcpy.GetMessages()
+        arcpy.AddError(msgs)
+        print(msgs)
+
+    except:
+        # Get the traceback object
+        tb = sys.exc_info()[2]
+        tbinfo = traceback.format_tb(tb)[0]
+
+        # Concatenate information together concerning the error
+        # into a message string
+        pymsg = ("PYTHON ERRORS:\nTraceback info:\n" + tbinfo +
+                 "\nError Info:\n" + str(sys.exc_info()[1]))
+        msgs = "ArcPy ERRORS:\n" + arcpy.GetMessages() + "\n"
+
+        # Return python error messages for use in script tool or Python Window
+        arcpy.AddError(pymsg)
+        arcpy.AddError(msgs)
+
+        # Print Python error messages for use in Python / Python Window
+        print(pymsg + "\n")
+        print(msgs)
+
+
     finally:
         arcpy.CheckInExtension("Spatial")
 
