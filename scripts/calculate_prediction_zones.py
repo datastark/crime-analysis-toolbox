@@ -16,7 +16,7 @@
 # ==================================================
 # calculate_prediction_zones.py BETA
 # --------------------------------------------------
-# requirments: ArcGIS 10.3.1, Python 2.7 or Python 3.4
+# requirments: ArcGIS 10.3.1, Python 2.7 #TODO: need to support 3.x and 10.4 as well
 # author: ArcGIS Solutions
 # contact: ArcGISTeamLocalGov@esri.com
 # company: Esri
@@ -242,7 +242,7 @@ def create_zone_fc(template, sr, out_path):
 
 
 def main(in_features, date_field, spatial_band_size, temporal_band_size,
-         probability_type, slice_num, out_raster, out_polygon,
+         init_date='', probability_type, slice_num, out_raster, out_polygon,
          pub_polys='', pub_type='', username='', password='',
          server_url='', poly_url='', *args):
 
@@ -272,6 +272,10 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
                             than this value will not be considered when
                             creating the prediction zones.
 
+        init_date: Initial processing date. All incidents with dates between
+                   this date and init_date - temporal_band_size will be
+                   included in the report
+
         probability_type: 'CUMULATIVE' (default) creates a surface resulting
                           from summing the prediction risks from each incident;
                           'MAXIMUM' creates a surface representing the maximum
@@ -293,6 +297,7 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
                    must exist previously. Service will be truncated and the
                    cumulative results from in_features will be appended
 
+        init_date: initial processing date.
         pub_type: Choice of publication environments- NONE, ARCGIS_ONLINE,
                   ARCGIS_PORTAL, ARCGIS_SERVER
 
@@ -317,6 +322,16 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
         # Convert booleen values
         if not pub_polys == 'True':
             pub_polys = False
+
+        # Get init_date value
+        if init_date == 'TODAY':
+            init_date = today
+        else:
+            try:
+                init_date = dt.strptime(init_date, "%Y-%m-$d")
+            except ValueError:
+                raise Exception("Invalid date format. Initial Date must be in the format yyyy-mm-dd.")
+
 
         # Work in an in-memory copy of the dataset to avoid editing the original
         incident_fc = arcpy.FeatureClassToFeatureClass_conversion(in_features,
@@ -343,7 +358,7 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
                                                    extent=d.extent)
 
         # Calculate minimum bounds of accepted time frame
-        date_min = today - td(days=int(temporal_band_size))
+        date_min = init_date - td(days=int(temporal_band_size))
 
         # Create risk rasters for each incident within temporal reach of today
         sql = """{0} <= date'{1}' AND {0} >= date'{2}'""".format(date_field,
