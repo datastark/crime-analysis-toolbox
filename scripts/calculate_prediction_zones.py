@@ -35,6 +35,8 @@ from datetime import date as dy
 from datetime import timedelta as td
 from os import path
 import os
+import traceback
+import math
 
 from arcrest.security import AGOLTokenSecurityHandler
 from arcresthelper import securityhandlerhelper
@@ -115,7 +117,7 @@ def connect_to_layer(username, password, server_url, service_url):
 # End of connect_to_layer function
 
 
-def calculate_risk_surface(lyr, age, dist):
+def calculate_risk_surface(lyr, age, dist, halflife, halfdist):
     """Create raster of risk extent and intensity based on incident age and
        spatial reach of influence"""
 
@@ -123,8 +125,15 @@ def calculate_risk_surface(lyr, age, dist):
     dist_raster = arcpy.sa.EucDistance(lyr,
                                        dist)
 
-    # Apply distance & temporal decay
-    inc_raster = (float(dist) - (dist_raster + 1.0)) * (float(2) / float(age + 1))
+    # Apply distance & temporal decay - math.log() is ln()
+    max_temporal_risk = 1.0
+
+    k_temporal = math.log(0.5)/-halflife
+    k_spatial = math.log(0.5)/-halfdist
+
+    dist_raster = arcpy.sa.Exp(dist_raster * -k_spatial)
+
+    inc_raster = max_temporal_risk * math.exp(-age * k_temporal) * dist_raster
 
     # Set Null values to 0 to allow for raster math
     null_locations = arcpy.sa.IsNull(inc_raster)
@@ -241,10 +250,10 @@ def create_zone_fc(template, sr, out_path):
 # End of create_zone_fc function
 
 
-def main(in_features, date_field, spatial_band_size, temporal_band_size,
-         init_date='', probability_type, slice_num, out_raster, out_polygon,
-         pub_polys='', pub_type='', username='', password='',
-         server_url='', poly_url='', *args):
+def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
+         temporal_band_size, temporal_half, probability_type, slice_num,
+         out_raster, out_polygon, pub_polys='', pub_type='', username='',
+         password='', server_url='', poly_url='', *args):
 
     """ Generates a raster and series of polygons based on that raster to
         illustrate the probability of incidents occuring at the current moment
@@ -328,7 +337,7 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
             init_date = today
         else:
             try:
-                init_date = dt.strptime(init_date, "%Y-%m-$d")
+                init_date = dt.strptime(init_date, "%Y-%m-%d")
             except ValueError:
                 raise Exception("Invalid date format. Initial Date must be in the format yyyy-mm-dd.")
 
@@ -381,7 +390,9 @@ def main(in_features, date_field, spatial_band_size, temporal_band_size,
 
                 inc_raster = calculate_risk_surface(incident_lyr,
                                                     date_diff.days,
-                                                    spatial_band_size)
+                                                    spatial_band_size,
+                                                    float(temporal_half),
+                                                    float(spatial_half))
 
                 # Process cumulative risk
                 if probability_type == 'CUMULATIVE':
