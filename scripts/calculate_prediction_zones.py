@@ -335,6 +335,8 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
         # Get init_date value
         if init_date == 'TODAY':
             init_date = today
+        elif init_date == 'YESTERDAY':
+            init_date = today - td(days=1)
         else:
             try:
                 init_date = dt.strptime(init_date, "%Y-%m-%d")
@@ -371,7 +373,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
         # Create risk rasters for each incident within temporal reach of today
         sql = """{0} <= date'{1}' AND {0} >= date'{2}'""".format(date_field,
-                                                                 today,
+                                                                 init_date,
                                                                  date_min)
         with arcpy.da.SearchCursor(incident_fc,
                                    ['OID@', date_field],
@@ -381,7 +383,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
             for incident in incidents:
 
                 # Calculate age of incident
-                date_diff = today - incident[1].date()
+                date_diff = init_date.date() - incident[1].date()
 
                 # Build float distance raster for incident
                 sql = """{} = {}""".format(oidname, incident[0])
@@ -405,7 +407,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
                 count += 1
 
         if not count:
-            raise Exception('No incidents found in between {} and {}'.format(date_min, today))
+            raise Exception('No incidents found in between {} and {}'.format(date_min, init_date))
 
         # Save final probability raster where values are > 0
         sum_raster = arcpy.sa.SetNull(sum_raster, sum_raster, "Value <= 0")
@@ -502,6 +504,15 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
 
 if __name__ == '__main__':
-    argv = tuple(arcpy.GetParameterAsText(i)
-                 for i in range(arcpy.GetArgumentCount()))
+    argv = [arcpy.GetParameterAsText(i)
+            for i in range(arcpy.GetArgumentCount())]
+
+    # Handle default values from results window
+    i = 0
+    while i < len(argv):
+        if argv[i] == "#":
+            argv[i] = ""
+        i+=1
+    argv = tuple(argv)
+
     main(*argv)
