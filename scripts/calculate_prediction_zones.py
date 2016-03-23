@@ -25,7 +25,7 @@
 #              occurance of a repeat or near repeat incident
 # ==================================================
 # history:
-# 04/02/2016 - AM - beta
+# 03/23/2016 - AM - beta
 # ==================================================
 
 import arcpy
@@ -383,7 +383,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
             for incident in incidents:
 
                 # Calculate age of incident
-                date_diff = init_date.date() - incident[1].date()
+                date_diff = init_date - incident[1].date()
 
                 # Build float distance raster for incident
                 sql = """{} = {}""".format(oidname, incident[0])
