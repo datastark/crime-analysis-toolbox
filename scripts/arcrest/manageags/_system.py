@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from .._abstract.abstract import BaseAGSServer
 import json
 ########################################################################
@@ -35,7 +37,7 @@ class System(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url, param_dict=params,
+        json_dict = self._get(url=self._url, param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -44,11 +46,11 @@ class System(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in System."
+                print( k, " - attribute not implemented in System.")
             del k
             del v
     #----------------------------------------------------------------------
@@ -80,15 +82,14 @@ class System(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        res = self._do_get(url=url,
+        res = self._get(url=url,
                            param_dict=params,
                            securityHandler=self._securityHandler,
                            proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)
         for direct in res['directories']:
-            url = url + "/%s" % direct["name"]
             directs.append(
-                ServerDirectory(url=url,
+                ServerDirectory(url=url + "/%s" % direct["name"],
                                 securityHandler=self._securityHandler,
                                 proxy_url=self._proxy_url,
                                 proxy_port=self._proxy_port,
@@ -107,7 +108,7 @@ class System(BaseAGSServer):
             "f" : "json"
         }
 
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -137,7 +138,7 @@ class System(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
@@ -155,7 +156,7 @@ class System(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -175,7 +176,7 @@ class System(BaseAGSServer):
             "f" : "json",
             "webAdaptorConfig" : webAdaptorConfig
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -222,7 +223,7 @@ class ConfigurationStore(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url, param_dict=params,
+        json_dict = self._get(url=self._url, param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -231,13 +232,13 @@ class ConfigurationStore(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k == "class":
                 self._class = v
             elif k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in Configuration store."
+                print( k, " - attribute not implemented in Configuration store.")
             del k
             del v
     #----------------------------------------------------------------------
@@ -305,7 +306,7 @@ class ConfigurationStore(BaseAGSServer):
             "move" : move,
             "runAsync" : runAsync
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -345,7 +346,7 @@ class Jobs(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url, param_dict=params,
+        json_dict = self._get(url=self._url, param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -354,11 +355,11 @@ class Jobs(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in Jobs."
+                print( k, " - attribute not implemented in Jobs.")
             del k
             del v
     #----------------------------------------------------------------------
@@ -385,7 +386,7 @@ class Jobs(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -507,7 +508,7 @@ class ServerProperties(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url, param_dict=params,
+        json_dict = self._get(url=self._url, param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -515,11 +516,11 @@ class ServerProperties(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in ServerProperties."
+                print( k, " - attribute not implemented in ServerProperties.")
             del k
             del v
     #----------------------------------------------------------------------
@@ -536,7 +537,7 @@ class ServerProperties(BaseAGSServer):
             "f" : "json",
             "properties" : properties
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -599,7 +600,7 @@ class ServerDirectory(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url, param_dict=params,
+        json_dict = self._get(url=self._url, param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -607,11 +608,11 @@ class ServerDirectory(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in ServerDirectory."
+                print( k, " - attribute not implemented in ServerDirectory.")
             del k
             del v
     #----------------------------------------------------------------------
@@ -702,7 +703,7 @@ class ServerDirectory(BaseAGSServer):
             "maxFileAge" : maxFileAge,
             "description" : description
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -722,7 +723,7 @@ class ServerDirectory(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -738,7 +739,7 @@ class ServerDirectory(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,

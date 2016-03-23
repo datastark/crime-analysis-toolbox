@@ -1,12 +1,21 @@
 """
-
+Contains all the spatial functions
 """
-import arcpy
-from arcpy import env
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import os, datetime
+try:
+    import arcpy
+    from arcpy import env
+    arcpyFound = True
+except:
+    arcpyFound = False
 #----------------------------------------------------------------------
 def create_feature_layer(ds, sql, name="layer"):
     """ creates a feature layer object """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     result = arcpy.MakeFeatureLayer_management(in_features=ds,
                                                out_layer=name,
                                                where_clause=sql)
@@ -14,19 +23,31 @@ def create_feature_layer(ds, sql, name="layer"):
 #----------------------------------------------------------------------
 def featureclass_to_json(fc):
     """converts a feature class to JSON"""
-    return arcpy.FeatureSet(fc).JSON
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
+    desc = arcpy.Describe(fc)
+    if desc.dataType == "Table" or desc.dataType == "TableView":
+        return recordset_to_json(table=fc)
+    else:
+        return arcpy.FeatureSet(fc).JSON
 #----------------------------------------------------------------------
 def recordset_to_json(table):
     """ converts the table to JSON """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     return arcpy.RecordSet(table).JSON
 #----------------------------------------------------------------------
 def json_to_featureclass(json_file, out_fc):
     """ converts a json file (.json) to a feature class """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     return arcpy.JSONToFeatures_conversion(in_json_file=json_file,
                                     out_features=out_fc)[0]
 #----------------------------------------------------------------------
 def table_to_json(table):
     """ returns a table as JSON """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     return arcpy.RecordSet(table).JSON
 #----------------------------------------------------------------------
 def get_attachment_data(attachmentTable, sql,
@@ -34,6 +55,8 @@ def get_attachment_data(attachmentTable, sql,
                         contentTypeField="CONTENT_TYPE",
                         rel_object_field="REL_OBJECTID"):
     """ gets all the data to pass to a feature service """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     ret_rows = []
     with arcpy.da.SearchCursor(attachmentTable,
                                [nameField,
@@ -59,6 +82,8 @@ def get_attachment_data(attachmentTable, sql,
 #----------------------------------------------------------------------
 def get_records_with_attachments(attachment_table, rel_object_field="REL_OBJECTID"):
     """"""
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     OIDs = []
     with arcpy.da.SearchCursor(attachment_table,
                                [rel_object_field]) as rows:
@@ -71,6 +96,8 @@ def get_records_with_attachments(attachment_table, rel_object_field="REL_OBJECTI
 #----------------------------------------------------------------------
 def get_OID_field(fs):
     """returns a featureset's object id field"""
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     desc = arcpy.Describe(fs)
     if desc.hasOID:
         return desc.OIDFieldName
@@ -78,6 +105,8 @@ def get_OID_field(fs):
 #----------------------------------------------------------------------
 def merge_feature_class(merges, out_fc, cleanUp=True):
     """ merges featureclass into a single feature class """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     if cleanUp == False:
         if len(merges) == 0:
             return None
@@ -109,10 +138,14 @@ def merge_feature_class(merges, out_fc, cleanUp=True):
 #----------------------------------------------------------------------
 def scratchFolder():
     """ returns the scratch foldre """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     return arcpy.env.scratchFolder
 #----------------------------------------------------------------------
 def scratchGDB():
     """ returns the arcpy scratch file geodatabase """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     return env.scratchGDB
 #----------------------------------------------------------------------
 def getDateFields(fc):
@@ -123,6 +156,8 @@ def getDateFields(fc):
        Output:
           List of date field names as strings
     """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     return [field.name for field in arcpy.ListFields(fc, field_type="Date")]
 #----------------------------------------------------------------------
 def insert_rows(fc,
@@ -131,6 +166,8 @@ def insert_rows(fc,
                 includeOIDField=False,
                 oidField=None):
     """ inserts rows based on a list features object """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     icur = None
     if includeOIDField:
         arcpy.AddField_management(fc, "FSL_OID", "LONG")
@@ -176,6 +213,8 @@ def create_feature_class(out_path,
                          fields,
                          objectIdField):
     """ creates a feature class in a given gdb or folder """
+    if arcpyFound == False:
+        raise Exception("ArcPy is required to use this function")
     arcpy.env.overwriteOutput = True
     field_names = []
     fc =arcpy.CreateFeatureclass_management(out_path=out_path,
@@ -246,7 +285,7 @@ def _unicode_convert(obj):
     if isinstance(obj, dict):
         return {_unicode_convert(key): \
                 _unicode_convert(value) \
-                for key, value in obj.iteritems()}
+                for key, value in obj.items()}
     elif isinstance(obj, list):
         return [_unicode_convert(element) for element in obj]
     elif isinstance(obj, unicode):

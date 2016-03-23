@@ -16,7 +16,10 @@
 # ==================================================
 # incident_classification.py BETA
 # --------------------------------------------------
-# requirments: ArcGIS 10.3.1, Python 2.7 #TODO: need to support 3.x and 10.4 as well
+# requirments: ArcMap/Catalog 10.3.1+
+#              ArcGIS Pro 1.2+
+#              ArcGIS Advanced license required
+#              Python 2.7 or 3.4
 # author: ArcGIS Solutions
 # contact: ArcGISTeamLocalGov@esri.com
 # company: Esri
@@ -99,8 +102,8 @@ def calculate_band(value, bands):
 
 
 def classify_incidents(in_features, date_field, report_location, spatial_bands,
-                       temporal_bands, out_lines_dir, out_lines_name,
-                       repeatdist=0, *args):
+                       temporal_bands, repeatdist, out_lines_dir, out_lines_name,
+                       *args):
     """Updates an input feature class to classify features according to their
        proximity in space and time to previous incidents
 
@@ -127,14 +130,14 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                        value that exceeds their proximity in time to their
                        nearest spatial neighbour.
 
+       repeatdist: Distance in the units of in_features below which adjacent
+                   incidents are considered repeats rather than near-repeats.
+                   Default value is 0.
+
        out_lines_dir: The workspace where the line features will be stored
 
        out_lines_name: The name of the feature class that will be created to
-                       hold the line features.
-
-       repeatdist: Distance in the units of in_features below which adjacent
-                   incidents are considered repeats rather than near-repeats.
-                   Default value is 0."""
+                       hold the line features."""
     try:
         # Build sorted lists of band values
         spatial_bands = [float(b) for b in spatial_bands.split(';')]
@@ -226,7 +229,10 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                 z_value = incident_date - min_date
                 nearfeat[7] = z_value.days
 
-                if nearfeat[1] > 0:
+                if not nearfeat[1]:
+                    pass
+
+                elif nearfeat[1] > 0:
 
                     # Get origin feature attributes
                     where_clause = """{} = {}""".format(oidname, oid)
@@ -238,7 +244,6 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                             o_y = ofeat[3]
 
                     # Calculate location of incidents in time progression
-
                     o_z_value = odate - min_date
 
                     # Calculate days between incidents
@@ -258,7 +263,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                     end = arcpy.Point(X=nearfeat[8], Y=nearfeat[9], Z=nearfeat[7])
                     start = arcpy.Point(X=o_x, Y=o_y, Z=o_z_value.days)
                     vertices = arcpy.Array([start, end])
-                    feature = arcpy.Polyline(vertices, sr, True, False)
+                    feature = arcpy.Polyline(vertices, None, True, False)
                     new_lines.append([datediff.days, feature])
 
                 # Save updates
@@ -300,8 +305,12 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                 if row[0] in origins:
                     row[2] = 'O'
                     orig_cnt += 1
+                elif not row[3]:
+                    pass
                 elif row[3] > 0:
-                    if row[1] <= repeatdist:
+                    if not row[1]:
+                        pass
+                    elif row[1] <= repeatdist:
                         row[2] = 'R'
                         rpt_cnt += 1
                     else:

@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from .._abstract.abstract import BaseAGSServer
 import json
-from parameters import ClusterProtocol
+from .parameters import ClusterProtocol
 ########################################################################
 class Clusters(BaseAGSServer):
     """
@@ -41,7 +43,7 @@ class Clusters(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url,
+        json_dict = self._get(url=self._url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
@@ -50,15 +52,15 @@ class Clusters(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                     if not attr.startswith('__') and \
                     not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in Clusters."
+                print( k, " - attribute not implemented in Clusters.")
             del k
             del v
     #----------------------------------------------------------------------
-    def createCluster(self, clusterName, machineNames="", tcpClusterPort=None):
+    def createCluster(self, clusterName, machineNames="", tcpClusterPort=""):
         """
         Creating a new cluster involves defining a clustering protocol that
         will be shared by all server machines participating in the cluster.
@@ -90,7 +92,7 @@ class Clusters(BaseAGSServer):
             "machineNames" : machineNames,
             "tcpClusterPort" : tcpClusterPort
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -107,7 +109,7 @@ class Clusters(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -155,7 +157,7 @@ class Cluster(BaseAGSServer):
             "f" : "json",
             "token" : self._securityHandler.token
         }
-        json_dict = self._do_get(url=self._url,
+        json_dict = self._get(url=self._url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
@@ -164,11 +166,11 @@ class Cluster(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                     if not attr.startswith('__') and \
                     not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in Clusters."
+                print( k, " - attribute not implemented in Clusters.")
             del k
             del v
     #----------------------------------------------------------------------
@@ -238,7 +240,7 @@ class Cluster(BaseAGSServer):
             "f" : "json"
         }
         url = self._url + "/start"
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -255,7 +257,7 @@ class Cluster(BaseAGSServer):
             "f" : "json"
         }
         url = self._url + "/stop"
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -272,7 +274,7 @@ class Cluster(BaseAGSServer):
             "f" : "json"
         }
         url = self._url + "/delete"
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -290,7 +292,7 @@ class Cluster(BaseAGSServer):
             "f" : "json"
         }
         url = self._url + "/services"
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -309,7 +311,7 @@ class Cluster(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -331,7 +333,7 @@ class Cluster(BaseAGSServer):
             "f" : "json",
             "machineNames" : machineNames
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -352,7 +354,7 @@ class Cluster(BaseAGSServer):
             "f" : "json",
             "machineNames" : machineNames
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -369,9 +371,9 @@ class Cluster(BaseAGSServer):
         url = self._url + "/editProtocol"
         params = {
             "f" : "json",
-            "clusterProtocol" : str(clusterProtocolObj)
+            "tcpClusterPort" : str(clusterProtocolObj.value['tcpClusterPort'])
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,

@@ -1,12 +1,22 @@
-from ..web import _base
-import httplib
+from __future__ import absolute_import
 import zipfile
 import datetime
 import calendar
 import glob
 import mimetypes
 import os
-class BaseGeoEnrichment(_base.BaseWebOperations):
+from ..packages.six.moves import http_client as httplib
+from ..web._base import BaseWebOperations
+
+###########################################################################
+class BaseCMP(BaseWebOperations):
+    """ base community mapping program class"""
+    pass
+class BaseOpenData(BaseWebOperations):
+    """ base opendata site"""
+    pass
+########################################################################
+class BaseGeoEnrichment(BaseWebOperations):
     """ base geoenrichment class """
     pass
 ########################################################################
@@ -27,8 +37,10 @@ class BaseOperationalLayerObject(object):
     pass
 ########################################################################
 class BaseGPObject(object):
-    """ base geoprocessing object class """
-    pass
+    """ base geoprocessing object """
+    _value = None
+    _paramName = None
+    _dataType = None
 ########################################################################
 class BaseDomain(object):
     """ all domain values inherit this class """
@@ -50,12 +62,12 @@ class BaseParameters(object):
     """ All parameter objects used for Portal/AGOL """
     pass
 ########################################################################
-class BaseSecurityHandler(_base.BaseWebOperations):
+class BaseSecurityHandler(BaseWebOperations):
     """ All Security Objects inherit from this class """
     _token = None
     _valid = True
     _message = ""
-    _is_portal = False    
+    _is_portal = False
     #----------------------------------------------------------------------
     @property
     def message(self):
@@ -65,8 +77,7 @@ class BaseSecurityHandler(_base.BaseWebOperations):
     @property
     def valid(self):
         """ returns boolean wether handler is valid """
-        return self._valid    
-   
+        return self._valid
 ########################################################################
 class AbstractGeometry(object):
     """ Base Geometry Class """
@@ -85,7 +96,7 @@ class DataSource(object):
     pass
 
 ########################################################################
-class BaseAGSServer(_base.BaseWebOperations):
+class BaseAGSServer(BaseWebOperations):
     """ base class from which all service inherit """
     _url = None
     _proxy_url = None
@@ -133,7 +144,7 @@ class BaseAGSServer(_base.BaseWebOperations):
     def _unicode_convert(self, obj):
         """ converts unicode to anscii """
         if isinstance(obj, dict):
-            return {self._unicode_convert(key): self._unicode_convert(value) for key, value in obj.iteritems()}
+            return {self._unicode_convert(key): self._unicode_convert(value) for key, value in obj.items()}
         elif isinstance(obj, list):
             return [self._unicode_convert(element) for element in obj]
         elif isinstance(obj, unicode):
@@ -145,17 +156,18 @@ class BaseAGSServer(_base.BaseWebOperations):
 # experienced with www.arcgis.com (first encountered 12/13/2012). The problem
 # and workaround is described here:
 # http://bobrochel.blogspot.com/2010/11/bad-servers-chunked-encoding-and.html
+
 def patch_http_response_read(func):
     def inner(*args):
         try:
             return func(*args)
-        except httplib.IncompleteRead, e:
-            return e.partial
+        except httplib.IncompleteRead as e:
+            return e
 
     return inner
 httplib.HTTPResponse.read = patch_http_response_read(httplib.HTTPResponse.read)
 ########################################################################
-class BaseAGOLClass(_base.BaseWebOperations):
+class BaseAGOLClass(BaseWebOperations):
 
     _token = None
     _org_url ="http://www.arcgis.com"
@@ -252,7 +264,7 @@ class BaseAGOLClass(_base.BaseWebOperations):
     def _unicode_convert(self, obj):
         """ converts unicode to anscii """
         if isinstance(obj, dict):
-            return {self._unicode_convert(key): self._unicode_convert(value) for key, value in obj.iteritems()}
+            return {self._unicode_convert(key): self._unicode_convert(value) for key, value in obj.items()}
         elif isinstance(obj, list):
             return [self._unicode_convert(element) for element in obj]
         elif isinstance(obj, unicode):

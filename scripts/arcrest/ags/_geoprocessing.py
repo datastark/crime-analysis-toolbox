@@ -1,13 +1,9 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import json
-from _gpobjects import *
+from ._gpobjects import *
 from .._abstract.abstract import BaseAGSServer, BaseGPObject
-from ..common.spatial import featureclass_to_json, recordset_to_json
 from ..common.general import local_time_to_online
-from ..security import security
-
-import urllib
-import time
-import datetime
 ########################################################################
 class GPService(BaseAGSServer):
     """
@@ -80,7 +76,7 @@ class GPService(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url, param_dict=params,
+        json_dict = self._get(url=self._url, param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -89,7 +85,7 @@ class GPService(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                     if not attr.startswith('__') and \
                     not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 if k == "tasks":
                     self._tasks = []
@@ -104,7 +100,7 @@ class GPService(BaseAGSServer):
                 else:
                     setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented for gp service."
+                print (k, " - attribute not implemented for gp service.")
     #----------------------------------------------------------------------
     def __str__(self):
         """returns the object as a string"""
@@ -116,7 +112,7 @@ class GPService(BaseAGSServer):
         """returns the JSON response in key/value pairs"""
         if self._json_dict is None:
             self.__init()
-        for k,v in self._json_dict.iteritems():
+        for k,v in self._json_dict.items():
             yield [k,v]
     #----------------------------------------------------------------------
     @property
@@ -192,18 +188,19 @@ class GPTask(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url, param_dict=params,
+        json_dict = self._get(url=self._url, param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
         attributes = [attr for attr in dir(self)
                     if not attr.startswith('__') and \
                     not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in GPTask."
+                print( k, " - attribute not implemented in GPTask.")
+            del k,v
 
     #----------------------------------------------------------------------
     @property
@@ -319,7 +316,7 @@ class GPTask(BaseAGSServer):
                 if isinstance(p, BaseGPObject):
                     params[p.paramName] = p.value
         if method.lower() == "get":
-            res = self._do_get(url=url, param_dict=params,
+            res = self._get(url=url, param_dict=params,
                                securityHandler=self._securityHandler,
                                 proxy_url=self._proxy_url,
                                 proxy_port=self._proxy_port)
@@ -330,7 +327,7 @@ class GPTask(BaseAGSServer):
                           proxy_port=self._proxy_port,
                           initialize=True)
         elif method.lower() == "post":
-            res = self._do_post(url=url, param_dict=params,
+            res = self._post(url=url, param_dict=params,
                                 securityHandler=self._securityHandler,
                                 proxy_url=self._proxy_url,
                                 proxy_port=self._proxy_port)
@@ -372,13 +369,13 @@ class GPTask(BaseAGSServer):
                 params[p.paramName] = p.value
             del p
         if method.lower() == "post":
-            return self._do_post(url=url,
+            return self._post(url=url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
         else:
-            return self._do_get(url=url,
+            return self._get(url=url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
@@ -419,7 +416,7 @@ class GPJob(BaseAGSServer):
     def __init(self):
         """ initializes all the properties """
         params = {"f" : "json"}
-        json_dict = self._do_get(url=self._url, param_dict=params,
+        json_dict = self._get(url=self._url, param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -427,18 +424,19 @@ class GPJob(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                     if not attr.startswith('__') and \
                     not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented for GPJob."
+                print (k, " - attribute not implemented for GPJob.")
+            del k,v
     #----------------------------------------------------------------------
     def cancelJob(self):
         """ cancels the job """
         params = {
             "f" : "json"
         }
-        return self._do_get(url=self._url + "/cancel",
+        return self._get(url=self._url + "/cancel",
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -459,7 +457,7 @@ class GPJob(BaseAGSServer):
             "f" : "json",
 
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -469,8 +467,7 @@ class GPJob(BaseAGSServer):
     def results(self):
         """ returns the results """
         self.__init()
-        _tempRes = []
-        for k,v in self._results.iteritems():
+        for k,v in self._results.items():
             param = self._get_json(v['paramUrl'])
             if param['dataType'] == "GPFeatureRecordSetLayer":
                 self._results[k] = GPFeatureRecordSetLayer.fromJSON(json.dumps(param))

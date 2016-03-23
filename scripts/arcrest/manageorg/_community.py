@@ -1,8 +1,11 @@
-from ..security.security import OAuthSecurityHandler, AGOLTokenSecurityHandler
+from __future__ import absolute_import
+from __future__ import print_function
+from ..packages.six.moves import urllib_parse as urlparse
+
 from .._abstract.abstract import BaseAGOLClass
 from datetime import datetime, timedelta
 from ..common.general import local_time_to_online
-import urlparse
+
 import json
 import os
 ########################################################################
@@ -34,7 +37,7 @@ class Community(BaseAGOLClass):
     #----------------------------------------------------------------------
     def __iter__(self):
         """returns the key/values of an object"""
-        for k,v in {}.iteritems():
+        for k,v in {}.items():
             yield k,v
     #----------------------------------------------------------------------
     def checkUserName(self, username):
@@ -51,7 +54,7 @@ class Community(BaseAGOLClass):
             "usernames" : username
         }
         url = self._url + "/checkUsernames"
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              proxy_url=self._proxy_url,
                              securityHandler=self._securityHandler,
@@ -64,7 +67,7 @@ class Community(BaseAGOLClass):
         params = {
             "f" : "json",
         }
-        return self._do_get(url=self._url + "/self",
+        return self._get(url=self._url + "/self",
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -107,7 +110,7 @@ class Community(BaseAGOLClass):
         if not sortOrder is None:
             params['sortOrder'] = sortOrder
         url = self._url + "/groups"
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -127,9 +130,14 @@ class Community(BaseAGOLClass):
         if communityInfo is None:
             communityInfo = self.communitySelf
 
+        if isinstance(groupNames,list):
+            groupNames = map(str.upper, groupNames)
+        else:
+            groupNames = groupNames.upper()
         if 'groups' in communityInfo:
             for gp in communityInfo['groups']:
-                if gp['title'] in groupNames:
+
+                if str(gp['title']).upper() in groupNames:
                     group_ids.append(gp['id'])
         del communityInfo
         return group_ids
@@ -203,25 +211,19 @@ class Community(BaseAGOLClass):
             "isViewOnly" : isViewOnly,
             "isInvitationOnly" : isInvitationOnly
         }
-        files = []
         url = self._url + "/createGroup"
-        parsed = urlparse.urlparse(url)
+
         groups = self.groups
         if thumbnail is not None and \
            os.path.isfile(thumbnail):
-            files.append(('thumbnail', thumbnail, os.path.basename(thumbnail)))
-            res = self._post_multipart(host=parsed.hostname,
-                                       port=parsed.port,
-                                       selector=parsed.path,
-                                       fields=params,
-                                       files=files,
-                                       securityHandler=self._securityHandler,
-                                       ssl=parsed.scheme.lower() == 'https',
-                                       proxy_url=self._proxy_url,
-                                       proxy_port=self._proxy_port)
-
+            res = self._post(url=url,
+                             param_dict=params,
+                             files={'thumbnail': thumbnail},
+                             securityHandler=self._securityHandler,
+                             proxy_url=self._proxy_url,
+                             proxy_port=self._proxy_port)
         else:
-            res = self._do_post(url=url, param_dict=params,
+            res = self._post(url=url, param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -318,7 +320,7 @@ class Groups(BaseAGOLClass):
 
         if self._portalId is None:
 
-            from administration import Administration
+            from .administration import Administration
             portalSelf = Administration(url=self._securityHandler.org_url,
                                   securityHandler=self._securityHandler,
                                   proxy_url=self._proxy_url,
@@ -388,7 +390,7 @@ class Groups(BaseAGOLClass):
             "sortOrder" : sortOrder,
             "sortField" : sortField
         }
-        return self._do_get(url=self._url,
+        return self._get(url=self._url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -473,7 +475,7 @@ class Group(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url,
+        json_dict = self._get(url=self._url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_port=self._proxy_port,
@@ -483,11 +485,11 @@ class Group(BaseAGOLClass):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in Group class."
+                print (k, " - attribute not implemented in Group class.")
     #----------------------------------------------------------------------
     def __str__(self):
         """returns raw JSON response as string"""
@@ -499,7 +501,7 @@ class Group(BaseAGOLClass):
         """returns properties (key/values) from the JSON response"""
         if self._json_dict is None:
             self.__init()
-        for k,v in self._json_dict.iteritems():
+        for k,v in self._json_dict.items():
             yield [k,v]
     #----------------------------------------------------------------------
     @property
@@ -682,7 +684,7 @@ class Group(BaseAGOLClass):
                     "f" : "json",
                     "targetUsername" : targetUsername
                 }
-        return self._do_post(url=self._url + "/reassign",
+        return self._post(url=self._url + "/reassign",
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -765,25 +767,24 @@ class Group(BaseAGOLClass):
             params['isInvitationOnly'] = isInvitationOnly
         if clearEmptyFields is not None:
             params['clearEmptyFields'] = clearEmptyFields
-        files = []
+        files = {}
         url = self._url + "/update"
-        parsed = urlparse.urlparse(url)
-        files.append(('thumbnail', thumbnail, os.path.basename(thumbnail)))
+
+        if thumbnail is not None and \
+           os.path.isfile(thumbnail):
+            files['thumbnail'] =thumbnail
         res = None
         if thumbnail is not None and \
            os.path.isfile(thumbnail):
-            res = self._post_multipart(host=parsed.hostname,
-                                       port=parsed.port,
-                                       securityHandler=self._securityHandler,
-                                       selector=parsed.path,
-                                       fields=params,
-                                       files=files,
-                                       ssl=parsed.scheme.lower() == 'https',
-                                       proxy_url=self._proxy_url,
-                                       proxy_port=self._proxy_port)
+            res = self._post(url=url,
+                             param_dict=params,
+                             files=files,
+                             securityHandler=self._securityHandler,
+                             proxy_url=self._proxy_url,
+                             proxy_port=self._proxy_port)
             return res
         else:
-            res = self._do_post(url=url, param_dict=params,
+            res = self._post(url=url, param_dict=params,
                                 securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -797,7 +798,7 @@ class Group(BaseAGOLClass):
         params = {
             "f" : "json",
         }
-        return self._do_post(url=self._url + "/delete",
+        return self._post(url=self._url + "/delete",
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -824,7 +825,7 @@ class Group(BaseAGOLClass):
         params = {
             "f" : "json",
         }
-        return self._do_post(url=self._url + "/join",
+        return self._post(url=self._url + "/join",
                              securityHandler=self._securityHandler,
                              param_dict=params,
                              proxy_url=self._proxy_url,
@@ -865,7 +866,7 @@ class Group(BaseAGOLClass):
             "role" : role,
             "expiration" : expiration
         }
-        return self._do_post(url=self._url + "/invite",
+        return self._post(url=self._url + "/invite",
                              securityHandler=self._securityHandler,
                              param_dict=params,
                              proxy_url=self._proxy_url,
@@ -884,7 +885,7 @@ class Group(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_post(url=self._url + "/leave",
+        return self._post(url=self._url + "/leave",
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -908,7 +909,7 @@ class Group(BaseAGOLClass):
             "f" : "json",
             "users" : users
         }
-        return self._do_post(url=self._url + "/removeUsers",
+        return self._post(url=self._url + "/removeUsers",
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -935,7 +936,7 @@ class Group(BaseAGOLClass):
             "f" : "json",
             "users" : users,
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -949,7 +950,7 @@ class Group(BaseAGOLClass):
         params = {
             "f" : "json"
             }
-        return self._do_get(url=self._url + "/users",
+        return self._get(url=self._url + "/users",
                             securityHandler=self._securityHandler,
                              param_dict=params,
                              proxy_url=self._proxy_url,
@@ -960,7 +961,7 @@ class Group(BaseAGOLClass):
         """returns all the group applications to join"""
         url = self._url + "/applications"
         params = {"f" : "json"}
-        res = self._do_get(url=url,
+        res = self._get(url=url,
                            param_dict=params,
                            proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)
@@ -1005,7 +1006,7 @@ class Group(BaseAGOLClass):
             params = {
                 "f" : "json"
             }
-            json_dict = self._do_get(url=self._url,
+            json_dict = self._get(url=self._url,
                                      param_dict=params,
                                      securityHandler=self._securityHandler,
                                      proxy_port=self._proxy_port,
@@ -1015,11 +1016,11 @@ class Group(BaseAGOLClass):
             attributes = [attr for attr in dir(self)
                           if not attr.startswith('__') and \
                           not attr.startswith('_')]
-            for k,v in json_dict.iteritems():
+            for k,v in json_dict.items():
                 if k in attributes:
                     setattr(self, "_"+ k, json_dict[k])
                 else:
-                    print k, " - attribute not implemented in Group.Application class."
+                    print (k, " - attribute not implemented in Group.Application class.")
         #----------------------------------------------------------------------
         @property
         def username(self):
@@ -1057,7 +1058,7 @@ class Group(BaseAGOLClass):
             """returns JSON as [key,value] objects"""
             if self._json_dict is None:
                 self.__init()
-            for k,v in self._json_dict.iteritems():
+            for k,v in self._json_dict.items():
                 yield [k,v]
         #----------------------------------------------------------------------
         def accept(self):
@@ -1073,7 +1074,7 @@ class Group(BaseAGOLClass):
             params = {
                 "f" : "json",
             }
-            return self._do_post(url="%s/accept" % (self.root),
+            return self._post(url="%s/accept" % (self.root),
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
@@ -1092,7 +1093,7 @@ class Group(BaseAGOLClass):
             params = {
                 "f" : "json",
             }
-            return self._do_post(url="%s/decline" % self.root,
+            return self._post(url="%s/decline" % self.root,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
@@ -1170,15 +1171,42 @@ class Users(BaseAGOLClass):
             "sortOrder" : sortOrder
         }
         url = self._url
-        return self._do_get(
+        return self._get(
             url = url,
             param_dict=params,
             securityHandler=self._securityHandler,
             proxy_url=self._proxy_url,
             proxy_port=self._proxy_port)
     #----------------------------------------------------------------------
-    def user(self, username):
+    def __getUsername(self):
+        """tries to parse the user name from various objects"""
+
+        if isinstance(self._securityHandler, (AGOLTokenSecurityHandler,
+                                              PortalTokenSecurityHandler)):
+            return self._securityHandler._username
+        elif self._securityHandler is not None and \
+               hasattr(self._securityHandler, "org_url") and \
+               self._securityHandler.org_url is not None:
+            from .administration import Administration
+            user = Administration(url=self._securityHandler.org_url,
+                                  securityHandler=self._securityHandler,
+                                  proxy_url=self._proxy_url,
+                                  proxy_port=self._proxy_port).portals.portalSelf.user
+            return user['username']
+        else:
+            from .administration import Administration
+            url = self._url.lower().split('/content/')[0]
+            user = Administration(url=url,
+                                  securityHandler=self._securityHandler,
+                                  proxy_url=self._proxy_url,
+                                  proxy_port=self._proxy_port).portals.portalSelf.user
+            return user['username']
+
+    #----------------------------------------------------------------------
+    def user(self, username=None):
         """A user resource that represents a registered user in the portal."""
+        if username is None:
+            username = self.__getUsername()
         url = self.root + "/%s" % username
         return User(url=url,
                     securityHandler=self._securityHandler,
@@ -1221,6 +1249,10 @@ class User(BaseAGOLClass):
     _preferredView = None
     _lastLogin = None
     _validateUserProfile = None
+    _assignedCredits = None
+    _availableCredits = None
+    _firstName = None
+    _lastName = None
     #----------------------------------------------------------------------
     def __init__(self,
                  url,
@@ -1243,7 +1275,7 @@ class User(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url,
+        json_dict = self._get(url=self._url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_port=self._proxy_port,
@@ -1253,11 +1285,11 @@ class User(BaseAGOLClass):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in User class."
+                print( k, " - attribute not implemented in User class.")
     #----------------------------------------------------------------------
     @property
     def root(self):
@@ -1275,7 +1307,7 @@ class User(BaseAGOLClass):
         if self._json_dict is None:
             self._json_dict = {}
             self.__init()
-        for k,v in self._json_dict.iteritems():
+        for k,v in self._json_dict.items():
             yield [k,v]
     #----------------------------------------------------------------------
     @property
@@ -1283,11 +1315,37 @@ class User(BaseAGOLClass):
         """allows access into the individual user's content to get at the
         items owned by the current user"""
         url = self._url.lower().replace('/community/', '/content/')
-        from _content import User as UserContent
+        from ._content import User as UserContent
         return UserContent(url=url,
                     securityHandler=self._securityHandler,
                     proxy_url=self._proxy_url,
                     proxy_port=self._proxy_port)
+    @property
+    def lastName(self):
+        '''gets the property value for username'''
+        if self._lastName is None:
+            self.__init()
+        return self._lastName
+    @property
+    def firstName(self):
+        '''gets the property value for username'''
+        if self._firstName is None:
+            self.__init()
+        return self._firstName
+    #----------------------------------------------------------------------
+    @property
+    def assignedCredits(self):
+        """returns the assignedCredits value"""
+        if self._assignedCredits is None:
+            self.__init()
+        return self._assignedCredits
+    #----------------------------------------------------------------------
+    @property
+    def availableCredits(self):
+        """gets the availableCredits value"""
+        if self._availableCredits is None:
+            self.__init()
+        return self._availableCredits
     #----------------------------------------------------------------------
     @property
     def disabled(self):
@@ -1485,7 +1543,7 @@ class User(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -1521,7 +1579,28 @@ class User(BaseAGOLClass):
         """
         url = "%s/invalidateSessions" % self.root
         params = {"f": "json"}
-        return self._do_post(url=url,
+        return self._post(url=url,
+                             param_dict=params,
+                             securityHandler=self._securityHandler,
+                             proxy_url=self._proxy_url,
+                             proxy_port=self._proxy_port)
+    #----------------------------------------------------------------------
+    def resetPassword(self, email=True):
+        """
+        resets a users password for an account.  The password will be randomly
+        generated and emailed by the system.
+
+        Input:
+           email - boolean that an email password will be sent to the
+                   user's profile email address.  The default is True.
+
+        """
+        url = self.root + "/reset"
+        params = {
+            "f" : "json",
+            "email" : email
+        }
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -1549,7 +1628,7 @@ class User(BaseAGOLClass):
             expiration = -1
         params['expiration'] = expiration
         url = "%s/expirePassword" % self.root
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -1564,7 +1643,7 @@ class User(BaseAGOLClass):
                     "f" : "json"
                 }
         url = "%s/disable" % self.root
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -1582,7 +1661,7 @@ class User(BaseAGOLClass):
             "f" : "json"
         }
         url = self.root + "/enable"
-        return self._do_get(securityHandler=self._securityHandler,
+        return self._get(securityHandler=self._securityHandler,
                             url = url,
                             param_dict=params,
                             proxy_url=self._proxy_url,
@@ -1598,7 +1677,8 @@ class User(BaseAGOLClass):
                securityQuestionIdx=None,
                securityAnswer=None,
                culture=None,
-               region=None
+               region=None,
+               userType=None
                ):
         """
         The Update User operation (POST only) modifies properties such as
@@ -1643,6 +1723,11 @@ class User(BaseAGOLClass):
                   browser/machine language setting.
         region - Specifies the region of featured maps and apps and the
                  basemap gallery.
+        userType - if the value is set to "both", then the value will allow
+                   users to access both ArcGIS Org and the forums from this
+                   account.  'arcgisorg' means the account is only valid
+                   for the organizational site.  This is an AGOL only
+                   parameter.
         """
         params = {
             "f" : "json"
@@ -1665,27 +1750,28 @@ class User(BaseAGOLClass):
             params['securityQuestionIdx'] = securityQuestionIdx
         if securityAnswer is not None:
             params['securityAnswer'] = securityAnswer
-
-        files = []
+        if userType is not None and \
+           userType.lower() in ['both', 'arcgisorg']:
+            params['userType'] = userType.lower()
+        files = {}
 
 
         url =  "%s/update" % self.root
-        parsed = urlparse.urlparse(url)
-        files.append(('thumbnail', thumbnail, os.path.basename(thumbnail)))
+
+        if thumbnail is not None and \
+           os.path.isfile(thumbnail):
+            files.append(('thumbnail', thumbnail, os.path.basename(thumbnail)))
         res = None
         if thumbnail is not None and \
            os.path.isfile(thumbnail):
-            res = self._post_multipart(host=parsed.hostname,
-                                       port=parsed.port,
-                                       selector=parsed.path,
-                                       fields=params,
-                                       files=files,
-                                       securityHandler=self._securityHandler,
-                                       ssl=parsed.scheme.lower() == 'https',
-                                       proxy_url=self._proxy_url,
-                                       proxy_port=self._proxy_port)
+            res = self._post(url=url,
+                             param_dict=params,
+                             files=files,
+                             securityHandler=self._securityHandler,
+                             proxy_url=self._proxy_url,
+                             proxy_port=self._proxy_port)
         else:
-            res = self._do_post(url=url,
+            res = self._post(url=url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
@@ -1709,7 +1795,7 @@ class User(BaseAGOLClass):
             "f" : "json"
         }
         url = self.root + "/delete"
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -1769,7 +1855,7 @@ class Invitations(BaseAGOLClass):
             params = {
                 "f" : "json"
             }
-            json_dict = self._do_get(url=self._url,
+            json_dict = self._get(url=self._url,
                                      param_dict=params,
                                      securityHandler=self._securityHandler,
                                      proxy_port=self._proxy_port,
@@ -1779,11 +1865,11 @@ class Invitations(BaseAGOLClass):
             attributes = [attr for attr in dir(self)
                           if not attr.startswith('__') and \
                           not attr.startswith('_')]
-            for k,v in json_dict.iteritems():
+            for k,v in json_dict.items():
                 if k in attributes:
                     setattr(self, "_"+ k, json_dict[k])
                 else:
-                    print k, " - attribute not implemented in Invitation class."
+                    print( k, " - attribute not implemented in Invitation class.")
         #----------------------------------------------------------------------
         @property
         def root(self):
@@ -1800,7 +1886,7 @@ class Invitations(BaseAGOLClass):
             """returns JSON as [key,value] objects"""
             if self._json_dict is None:
                 self.__init()
-            for k,v in self._json_dict.iteritems():
+            for k,v in self._json_dict.items():
                 yield [k,v]
         #----------------------------------------------------------------------
         @property
@@ -1941,7 +2027,7 @@ class Invitations(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url,
+        json_dict = self._get(url=self._url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_port=self._proxy_port,
@@ -1951,11 +2037,11 @@ class Invitations(BaseAGOLClass):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in Invitations class."
+                print( k, " - attribute not implemented in Invitations class.")
     #----------------------------------------------------------------------
     @property
     def root(self):
@@ -1972,7 +2058,7 @@ class Invitations(BaseAGOLClass):
         """returns JSON as [key,value] objects"""
         if self._json_dict is None:
             self.__init()
-        for k,v in self._json_dict.iteritems():
+        for k,v in self._json_dict.items():
             yield [k,v]
     #----------------------------------------------------------------------
     @property
@@ -2038,7 +2124,7 @@ class Notifications(BaseAGOLClass):
             params = {
                 "f" : "json"
             }
-            json_dict = self._do_get(url=self._url,
+            json_dict = self._get(url=self._url,
                                      param_dict=params,
                                      securityHandler=self._securityHandler,
                                      proxy_port=self._proxy_port,
@@ -2048,11 +2134,11 @@ class Notifications(BaseAGOLClass):
             attributes = [attr for attr in dir(self)
                           if not attr.startswith('__') and \
                           not attr.startswith('_')]
-            for k,v in json_dict.iteritems():
+            for k,v in json_dict.items():
                 if k in attributes:
                     setattr(self, "_"+ k, json_dict[k])
                 else:
-                    print k, " - attribute not implemented in Notification class."
+                    print( k, " - attribute not implemented in Notification class.")
         #----------------------------------------------------------------------
         @property
         def targetType(self):
@@ -2116,14 +2202,14 @@ class Notifications(BaseAGOLClass):
             """returns JSON as [key,value] objects"""
             if self._json_dict is None:
                 self.__init()
-            for k,v in self._json_dict.iteritems():
+            for k,v in self._json_dict.items():
                 yield [k,v]
         #----------------------------------------------------------------------
         def delete(self):
             """deletes the current notification from the user"""
             url = "%s/delete" % self.root
             params = {"f":"json"}
-            return self._do_post(url=url,
+            return self._post(url=url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
@@ -2150,7 +2236,7 @@ class Notifications(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url,
+        json_dict = self._get(url=self._url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_port=self._proxy_port,
@@ -2160,11 +2246,11 @@ class Notifications(BaseAGOLClass):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in Notifications class."
+                print( k, " - attribute not implemented in Notifications class.")
     #----------------------------------------------------------------------
     @property
     def root(self):
@@ -2181,7 +2267,7 @@ class Notifications(BaseAGOLClass):
         """returns JSON as [key,value] objects"""
         if self._json_dict is None:
             self.__init()
-        for k,v in self._json_dict.iteritems():
+        for k,v in self._json_dict.items():
             yield [k,v]
     #----------------------------------------------------------------------
     @property

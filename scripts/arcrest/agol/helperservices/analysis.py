@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from ...ags._geoprocessing import *
 from ..._abstract import abstract
 ########################################################################
@@ -36,7 +37,7 @@ class analysis(abstract.BaseAGOLClass):
             for task in a.tasks:
                 if task.name.lower() == "aggregatepoints":
                     for params in task.parameters:
-                        print params
+                        print( params)
     """
     _proxy_url = None
     _proxy_port = None
@@ -68,7 +69,7 @@ class analysis(abstract.BaseAGOLClass):
         params = {
             "f" :"json"
         }
-        res = self._do_get(url=portals_self_url,
+        res = self._get(url=portals_self_url,
                            param_dict=params,
                            securityHandler=self._securityHandler,
                            proxy_url=self._proxy_url,

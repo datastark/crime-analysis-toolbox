@@ -1,7 +1,46 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from .._abstract.abstract import BaseParameters
 from ..common.geometry import SpatialReference, Envelope
 import os
 import json
+########################################################################
+class InvitationList(object):
+    """Used for Inviting users to a site"""
+    _invites = []
+    _value = {}
+    #----------------------------------------------------------------------
+    def __init__(self):
+        """Constructor"""
+        self._invites = []
+    #----------------------------------------------------------------------
+    def addUser(self, username, password,
+                firstname, lastname,
+                email, role):
+        """adds a user to the invitation list"""
+        self._invites.append({
+            "username":username,
+            "password":password,
+            "firstname":firstname,
+            "lastname":lastname,
+            "fullname":"%s %s" % (firstname, lastname),
+            "email":email,
+            "role":role
+        })
+    #----------------------------------------------------------------------
+    def removeByIndex(self, index):
+        """removes a user from the invitation list by position"""
+        if index < len(self._invites) -1 and \
+           index >=0:
+            self._invites.remove(index)
+    #----------------------------------------------------------------------
+    def __str__(self):
+        """returns object as string"""
+        return json.dumps(self._value)
+    #----------------------------------------------------------------------
+    def value(self):
+        """returns object as dictionary"""
+        return {"invitations": self._invites}
 ########################################################################
 class AnalyzeParameters(BaseParameters):
     """
@@ -199,16 +238,18 @@ class CreateServiceParameters(BaseParameters):
                  syncEnabled =True
                  ):
         """Constructor"""
+
+
         self._name = name
         if isinstance(spatialReference, SpatialReference):
             self._spatialReference = spatialReference.value
         else:
             raise AttributeError('spatialReference must be of type geometry.SpatialReference')
-        self._serviceDescription = serviceDescription
-        self._hasStaticData = hasStaticData
+        self._serviceDescription= serviceDescription
+        self._hasStaticData= hasStaticData
         self._maxRecordCount=maxRecordCount
         self._supportedQueryFormats= supportedQueryFormats
-        self._capabilities= capabilities
+        self._capabilities = capabilities
         self._description= description
         self._copyrightText= copyrightText
         if initialExtent is not None:
@@ -216,11 +257,30 @@ class CreateServiceParameters(BaseParameters):
                 self._initialExtent= initialExtent.value
             else:
                 raise AttributeError('initialExtent must be of type geometry.Envelope')
-        self._allowGeometryUpdates = allowGeometryUpdates
-        self._units = units
-        self._xssPreventionEnabled =  xssPreventionEnabled
-        self._xssPreventionRule = xssPreventionRule
-        self._xssInputRule = xssInputRule
+        self._allowGeometryUpdates=allowGeometryUpdates
+        self._units=units
+        self._xssPreventionEnabled=xssPreventionEnabled
+        self._xssPreventionRule=xssPreventionRule
+        self._xssInputRule=xssInputRule
+        self._currentVersion=currentVersion
+        self._enableEditorTracking = enableEditorTracking
+        self._enableOwnershipAccessControl = enableOwnershipAccessControl
+        self._allowOthersToUpdate = allowOthersToUpdate
+        self._allowOthersToDelete = allowOthersToDelete
+        self._supportsAsync = supportsAsync
+        self._supportsRegisteringExistingData = supportsRegisteringExistingData
+        self._supportsSyncDirectionControl = supportsSyncDirectionControl
+        self._supportsPerLayerSync = supportsPerLayerSync
+        self._supportsPerReplicaSync = supportsPerReplicaSync
+        self._supportsRollbackOnFailure = supportsRollbackOnFailure
+        self._hasVersionedData = hasVersionedData
+        self._supportsDisconnectedEditing = supportsDisconnectedEditing
+        self._size =size
+        self._syncEnabled =syncEnabled
+
+
+
+
     #----------------------------------------------------------------------
     @property
     def value(self):
@@ -274,6 +334,8 @@ class PortalParameters(BaseParameters):
     """
     The following parameters represent the properties of a portal
     """
+    _contacts = None
+    _authorizedCrossOriginDomains = None
     _canSharePublic = None
     _subscriptionInfo = None
     _defaultExtent = None
@@ -342,7 +404,10 @@ class PortalParameters(BaseParameters):
     _basemapGalleryGroupQuery = None
     _region = None
     _portalMode = None
-    __allowed_keys = ["canSharePublic","subscriptionInfo","defaultExtent","supportsHostedServices",
+    _creditAssignments = None
+    __allowed_keys = ["creditAssignments", "contacts", "canSharePublic",
+                      "subscriptionInfo","defaultExtent",
+                      "supportsHostedServices", "authorizedCrossOriginDomains",
                       "homePageFeaturedContentCount","supportsOAuth","portalName","urlKey",
                       "databaseUsage","culture","helpBase","galleryTemplatesGroupQuery",
                       "commentsEnabled","metadataEditable","databaseQuota","id","canSearchPublic",
@@ -370,7 +435,7 @@ class PortalParameters(BaseParameters):
         """creates the portal properties object from a dictionary"""
         if isinstance(value, dict):
             pp = PortalParameters()
-            for k,v in value.iteritems():
+            for k,v in value.items():
                 setattr(pp, "_%s" % k, v)
             return pp
         else:
@@ -381,8 +446,9 @@ class PortalParameters(BaseParameters):
         """ returns the class as a dictionary """
         val = {}
         for k in self.__allowed_keys:
-            val = getattr(self, "_" + k)
-            val[k] = val
+            v = getattr(self, "_" + k)
+            if v is not None:
+                val[k] = v
         return val
     @property
     def canSharePublic(self):
@@ -405,6 +471,28 @@ class PortalParameters(BaseParameters):
         """gets/sets the property value subscriptionInfo"""
         if value is not None:
             self._subscriptionInfo = value
+    #----------------------------------------------------
+    @property
+    def contacts(self):
+        """gets/sets the property value contacts"""
+        return self._contacts
+    #----------------------------------------------------
+    @contacts.setter
+    def contacts(self,value):
+        """gets/sets the property value contacts"""
+        if value is not None:
+            self._contacts = value
+    #----------------------------------------------------
+    @property
+    def authorizedCrossOriginDomains(self):
+        """gets/sets the property value authorizedCrossOriginDomains"""
+        return self._contacts
+    #----------------------------------------------------
+    @authorizedCrossOriginDomains.setter
+    def authorizedCrossOriginDomains(self,value):
+        """gets/sets the property value authorizedCrossOriginDomains"""
+        if value is not None:
+            self._contacts = value
     #----------------------------------------------------
     @property
     def defaultExtent(self):
@@ -1131,6 +1219,17 @@ class PortalParameters(BaseParameters):
         """gets/sets the property value portalMode"""
         if value is not None:
             self._portalMode = value
+    #----------------------------------------------------
+    @property
+    def creditAssignments(self):
+        """gets/sets the property value creditAssignments"""
+        return self._creditAssignments
+    #----------------------------------------------------
+    @creditAssignments.setter
+    def creditAssignments(self,value):
+        """gets/sets the property value creditAssignments"""
+        if value is not None:
+            self._creditAssignments = value
 ########################################################################
 class ItemParameter(BaseParameters):
     """
@@ -1158,6 +1257,7 @@ class ItemParameter(BaseParameters):
        type - The type of the item. Must be drawn from the list of
               supported types. See Items and item types for a list of the
               supported types.
+              http://resources.arcgis.com/en/help/arcgis-rest-api/#/Items_and_item_types/02r3000000ms000000/
        typeKeywords - Type keywords describe the type and should logically
                       apply to all items of that type. See Items and item
                       types for a list of the different predefined type
@@ -1183,7 +1283,10 @@ class ItemParameter(BaseParameters):
                          Server service. It is valid on Map Services,
                          Feature Services, and Image Services only.
        fileName - name of the file updating (optional)
+       archiveSelect - type of archive. Values: filegeodatabase
+       stylx - 2d or 3d value
     """
+    _archiveSelect = None
     _title = None
     _thumbnail = None
     _thumbnailurl = None
@@ -1202,6 +1305,7 @@ class ItemParameter(BaseParameters):
     _serviceUsername = None
     _servicePassword = None
     _filename = None
+    _stylx = None
     #----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
@@ -1362,6 +1466,16 @@ class ItemParameter(BaseParameters):
         """gets/sets an item description of any length"""
         if self._description != value:
             self._description = value
+    @property
+    def archiveSelect(self):
+        """ gets/sets an item archiveSelect value"""
+        return self._archiveSelect
+    #----------------------------------------------------------------------
+    @archiveSelect.setter
+    def archiveSelect(self, value):
+        """gets/sets an item description of any length"""
+        if self._archiveSelect != value:
+            self._archiveSelect = value
     #----------------------------------------------------------------------
     @property
     def tags(self):
@@ -1427,6 +1541,17 @@ class ItemParameter(BaseParameters):
         """gets/sets the coordinate system of the item """
         if self._spatialReference != value:
             self._spatialReference = value
+    #----------------------------------------------------------------------
+    @property
+    def stylx(self):
+        """gets/sets the stylx value"""
+        return self._stylx
+    #----------------------------------------------------------------------
+    @stylx.setter
+    def stylx(self, value):
+        """gets/sets the stylx value"""
+        if self._stylx != value:
+            self._stylx = value
     #----------------------------------------------------------------------
     @property
     def accessInformation(self):
@@ -2434,7 +2559,7 @@ class PublishFGDBParameter(BaseParameters):
         return json.dumps(self.value)
 
 ########################################################################
-class PublishSDParmaeters(BaseParameters):
+class PublishSDParameters(BaseParameters):
     """
     Required parameters to publish SD Parameters
     """

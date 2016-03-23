@@ -1,10 +1,12 @@
 """
 handles the upload functions for all viable services
 """
+from __future__ import absolute_import
+from __future__ import division
 import os
 import mmap
 import json
-import urlparse
+from ..packages.six.moves import urllib_parse as urlparse
 from ..security import security
 from .._abstract import abstract
 ########################################################################
@@ -44,7 +46,7 @@ class Uploads(abstract.BaseAGOLClass):
          dictionary json response
         """
         url = self._url + "/upload"
-
+        files = {'file', filePath}
         params = {
             "f" : "json"
         }
@@ -52,16 +54,12 @@ class Uploads(abstract.BaseAGOLClass):
            isinstance(description, str):
             params['description'] = description
 
-        parsed = urlparse.urlparse(url)
-        return self._post_multipart(host=parsed.hostname,
-                             selector=parsed.path,
-                             port=parsed.port,
-                             fields=params,
-                             files=["file", os.path.basename(filePath), filePath],
-                             ssl=parsed.scheme.lower() == 'https',
-                             securityHandler=self._securityHandler,
-                             proxy_url=self._proxy_url,
-                             proxy_port=self._proxy_port)
+        return self._post(url=url,
+                          param_dict=params,
+                          files=files,
+                          securityHandler=self._securityHandler,
+                          proxy_url=self._proxy_url,
+                          proxy_port=self._proxy_port)
     #----------------------------------------------------------------------
     def registerItem(self, itemName, description=None):
         """
@@ -82,7 +80,7 @@ class Uploads(abstract.BaseAGOLClass):
         }
         if description is not None:
             params['description'] = description
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port,
@@ -115,7 +113,7 @@ class Uploads(abstract.BaseAGOLClass):
             if os.fstat(f.fileno()).st_size % size > 0:
                 steps += 1
             for i in range(steps):
-                files = []
+                files = {}
                 tempFile = os.path.join(os.environ['TEMP'], "split.part%s" % i)
                 if os.path.isfile(tempFile):
                     os.remove(tempFile)
@@ -124,19 +122,16 @@ class Uploads(abstract.BaseAGOLClass):
                     writer.flush()
                     writer.close()
                 del writer
-                files.append(('file', tempFile, os.path.basename(tempFile)))
+                files['file'] = tempFile
                 params['partNum'] = i + 1
-                parsed = urlparse.urlparse(url)
-                res = self._post_multipart(host=parsed.hostname,
-                                           selector=parsed.path,
-                                           files = files,
-                                           fields=params,
-                                           port=parsed.port,
-                                           securityHandler=self._securityHandler,
-                                           ssl=parsed.scheme.lower() == 'https',
-                                           proxy_port=self._proxy_port,
-                                           proxy_url=self._proxy_url)
+                res = self._post(url=url,
+                                  param_dict=params,
+                                  files=files,
+                                  securityHandler=self._securityHandler,
+                                  proxy_url=self._proxy_url,
+                                  proxy_port=self._proxy_port)
                 os.remove(tempFile)
+                del files
             del mm
         return self.commit(registerID)
     #----------------------------------------------------------------------
@@ -158,7 +153,7 @@ class Uploads(abstract.BaseAGOLClass):
         }
         if checksum is not None:
             params['checksum'] = checksum
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -170,7 +165,7 @@ class Uploads(abstract.BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port,
@@ -182,7 +177,7 @@ class Uploads(abstract.BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port,
@@ -195,7 +190,7 @@ class Uploads(abstract.BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)

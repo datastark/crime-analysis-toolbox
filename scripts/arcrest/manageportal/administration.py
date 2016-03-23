@@ -6,10 +6,12 @@ information and have a well-defined state. Operations act on these
 resources and update their information or state. Resources and operations
 are hierarchical and have unique universal resource locators (URLs).
 """
+from __future__ import absolute_import
+from __future__ import print_function
 import json
 from datetime import datetime
 from .._abstract.abstract import BaseAGOLClass
-from ..security import PortalTokenSecurityHandler,ArcGISTokenSecurityHandler,OAuthSecurityHandler,AGOLTokenSecurityHandler
+from ..security import PortalTokenSecurityHandler,ArcGISTokenSecurityHandler,OAuthSecurityHandler
 ########################################################################
 class _log(BaseAGOLClass):
     """handles the portal log information at 10.3.1+"""
@@ -43,7 +45,7 @@ class _log(BaseAGOLClass):
         params = {
             "f" : "json",
         }
-        json_dict = self._do_get(self._url, params,
+        json_dict = self._get(self._url, params,
                                  securityHandler=self._securityHandler,
                                  proxy_port=self._proxy_port,
                                  proxy_url=self._proxy_url)
@@ -52,11 +54,11 @@ class _log(BaseAGOLClass):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in manageportal.administration.log class."
+                print( k, " - attribute not implemented in manageportal.administration.log class.")
     #----------------------------------------------------------------------
     def __str__(self):
         """returns object as string"""
@@ -85,7 +87,7 @@ class _log(BaseAGOLClass):
         params = {
             "f" : "json",
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
@@ -109,7 +111,7 @@ class _log(BaseAGOLClass):
             "logLevel" : logLevel,
             "maxLogFileAge" : maxLogFileAge
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -162,7 +164,7 @@ class _log(BaseAGOLClass):
         else:
             params['pageSize'] = 1000
         params['filter'] = filter_value
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -174,7 +176,7 @@ class _log(BaseAGOLClass):
         params = {
             "f":"json"
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -218,7 +220,7 @@ class _Security(BaseAGOLClass):
         params = {
             "f" : "json",
         }
-        json_dict = self._do_get(self._url, params,
+        json_dict = self._get(self._url, params,
                                  securityHandler=self._securityHandler,
                                  proxy_port=self._proxy_port,
                                  proxy_url=self._proxy_url)
@@ -227,11 +229,11 @@ class _Security(BaseAGOLClass):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in manageportal.administration.log class."
+                print( k, " - attribute not implemented in manageportal.administration.log class.")
     #----------------------------------------------------------------------
     def __str__(self):
         """returns object as string"""
@@ -288,7 +290,7 @@ class _Security(BaseAGOLClass):
         }
         if idpUsername is None:
             params['idpUsername'] = idpUsername
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_port=self._proxy_port,
@@ -331,7 +333,7 @@ class _Security(BaseAGOLClass):
             "enableAutomaticAccountCreation": enableAutomaticAccountCreation,
             "disableServicesDirectory" : disableServicesDirectory
         }
-        return self._do_post(url=url, param_dict=params,
+        return self._post(url=url, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_port=self._proxy_port,
                              proxy_url=self._proxy_url)
@@ -345,7 +347,7 @@ class _Security(BaseAGOLClass):
                            usernameAttribute,
                            isPasswordEncrypted=False,
                            caseSensitive=True):
-        """
+        r"""
         You can use this operation to change the identity provider
         configuration in your portal. When Portal for ArcGIS is first
         installed, it supports token-based authentication using the
@@ -402,7 +404,7 @@ class _Security(BaseAGOLClass):
             "usernameAttribute" : usernameAttribute,
             "caseSensitive" : caseSensitive
         }
-        return self._do_post(url=url, param_dict=params,
+        return self._post(url=url, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_port=self._proxy_port,
                              proxy_url=self._proxy_url)
@@ -421,7 +423,7 @@ class _Security(BaseAGOLClass):
             "f" : "json",
             "tokenConfig" : {"sharedKey" : sharedKey}
         }
-        return self._do_post(url=url, param_dict=params,
+        return self._post(url=url, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -437,7 +439,7 @@ class _Security(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -459,7 +461,7 @@ class _Security(BaseAGOLClass):
         params = {
             "f" : "json",
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -472,7 +474,7 @@ class _Security(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -515,7 +517,7 @@ class _System(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -549,7 +551,7 @@ class _System(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -572,7 +574,7 @@ class _System(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_port=self._proxy_port,
@@ -593,7 +595,7 @@ class _System(BaseAGOLClass):
             "f" : "json",
             "webAdaptorsConfig" : webAdaptorsConfig
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_port=self._proxy_port,
@@ -614,7 +616,7 @@ class _System(BaseAGOLClass):
         params = {
             "f" : "json",
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_port=self._proxy_port,
@@ -649,7 +651,7 @@ class _System(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -674,7 +676,7 @@ class _System(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -700,7 +702,7 @@ class _System(BaseAGOLClass):
             "physicalPath": physicalPath,
             "description" : description
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -721,7 +723,7 @@ class _System(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -748,7 +750,7 @@ class _System(BaseAGOLClass):
             "username" : username,
             "password" : password
         }
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_port=self._proxy_port,
@@ -766,7 +768,7 @@ class _System(BaseAGOLClass):
         params = {
             "f" : "json",
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -787,7 +789,7 @@ class _System(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -816,7 +818,7 @@ class _System(BaseAGOLClass):
             "mode" : mode,
             "includes" : includes
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -844,7 +846,7 @@ class _System(BaseAGOLClass):
             "indexerHost": indexerHost,
             "indexerPort": indexerPort
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -860,7 +862,7 @@ class _System(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -908,7 +910,7 @@ class PortalAdministration(BaseAGOLClass):
             "f" : "json",
         }
 
-        json_dict = self._do_get(self._url, params,
+        json_dict = self._get(self._url, params,
                                  securityHandler=self._securityHandler,
                                  proxy_port=self._proxy_port,
                                  proxy_url=self._proxy_url)
@@ -917,11 +919,11 @@ class PortalAdministration(BaseAGOLClass):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in manageportal.administration class."
+                print( k, " - attribute not implemented in manageportal.administration class.")
     #----------------------------------------------------------------------
     def __str__(self):
         """returns object as string"""
@@ -933,7 +935,7 @@ class PortalAdministration(BaseAGOLClass):
         """returns the raw key/values for the object"""
         if self._json_dict is None:
             self.__init()
-        for k,v in self._json_dict.iteritems():
+        for k,v in self._json_dict.items():
             yield [k,v]
 
     #----------------------------------------------------------------------
@@ -998,7 +1000,7 @@ class PortalAdministration(BaseAGOLClass):
             "securityQuerstionIdx" : securityQuerstionIdx,
             "securityQuestionAns" : securityQuestionAns
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,

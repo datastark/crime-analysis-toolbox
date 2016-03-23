@@ -1,9 +1,16 @@
-from ..security.security import ArcGISTokenSecurityHandler,AGOLTokenSecurityHandler, PortalTokenSecurityHandler, OAuthSecurityHandler, PortalServerSecurityHandler
+"""
+   Manages Portal/AGOL content, users, items, etc..
+"""
+from __future__ import absolute_import
+from __future__ import print_function
+from ..security import PortalServerSecurityHandler
 from .._abstract.abstract import BaseAGOLClass
 import json
-import _community, _content, _portals, _oauth2
+from . import _community, _content, _portals, _oauth2
 from ..hostedservice import Services
 from ..manageags import AGSAdministration
+from ..packages.six.moves.urllib_parse import urlparse, urlunparse
+
 ########################################################################
 class Administration(BaseAGOLClass):
     """  Administers the AGOL/Portal Site """
@@ -28,33 +35,40 @@ class Administration(BaseAGOLClass):
             url = securityHandler.org_url
         if url is None or url == '':
             raise AttributeError("URL or Security Handler needs to be specified")
-
         if url.lower().find("/sharing") > -1:
-            pass
-        else:
-            url = url + "/sharing"
-
-        if url.lower().find("/rest") > -1:
             self._url = url
         else:
-            self._url = url + "/rest"
-
+            self._url = url + "/sharing"
+        #if url.lower().find("/rest") > -1:
+            #self._url = url
+        #else:
+            #self._url = url + "/rest"
         self._proxy_url = proxy_url
         self._proxy_port = proxy_port
         if securityHandler is not None:
-
             self._referer_url = securityHandler.referer_url
         else:
             raise AttributeError("Security Handler is required for the administration function")
+
+        urlInfo = urlparse(self._url)
+        if str(urlInfo.netloc).lower() == "www.arcgis.com"> -1:
+            portalSelf = self.portals.portalSelf
+            urlInfo=urlInfo._replace(netloc= "%s.%s" % (portalSelf.urlKey, portalSelf.customBaseUrl))
+            self._url = urlunparse(urlInfo)
+            self._url = "https://%s.%s/sharing" % (portalSelf.urlKey, portalSelf.customBaseUrl)
+            del portalSelf
+
         if initialize:
-            self.__init(url=url)
+            self.__init(url=self._url)
     #----------------------------------------------------------------------
-    def __init(self, url):
+    def __init(self, url=None):
         """ initializes the site properties """
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=url,
+        if url is None:
+            url = self._url
+        json_dict = self._get(url=url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_port=self._proxy_port,
@@ -64,11 +78,12 @@ class Administration(BaseAGOLClass):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in Administration class."
+                print( k, " - attribute not implemented in Administration class.")
+            del k, v
     #----------------------------------------------------------------------
     @property
     def asDictionary(self):
@@ -85,7 +100,7 @@ class Administration(BaseAGOLClass):
     #----------------------------------------------------------------------
     def __iter__(self):
         """iterates over raw json and returns the values"""
-        for k,v in self._json_dict.iteritems():
+        for k,v in self._json_dict.items():
             yield k,v
     #----------------------------------------------------------------------
     @property
@@ -233,13 +248,13 @@ class Administration(BaseAGOLClass):
         if useSecurity and \
            self._securityHandler is not None and \
            self._securityHandler.method == "token":
-                params["token"] = self._securityHandler.token
+            params["token"] = self._securityHandler.token
         if sortField is not None:
             params['sortField'] = sortField
         if bbox is not None:
             params['bbox'] = bbox
 
-        return self._do_get(url=url,
+        return self._get(url=url,
                         param_dict=params,
                         securityHandler=self._securityHandler,
                         proxy_url=self._proxy_url,
@@ -257,9 +272,9 @@ class Administration(BaseAGOLClass):
         portal = portals.portalSelf
         urls = portal.urls
         if 'error' in urls:
-            print urls
+            print( urls)
             return
-        
+
         services = []
         if urls != {}:
             if 'urls' in urls:
@@ -267,14 +282,14 @@ class Administration(BaseAGOLClass):
                     if 'https' in urls['urls']['features']:
                         for https in urls['urls']['features']['https']:
                             if portal.isPortal == True:
-                               
+
                                 url = "%s/admin" % https
                                 #url = https
                                 services.append(AGSAdministration(url=url,
                                              securityHandler=self._securityHandler,
                                              proxy_url=self._proxy_url,
                                              proxy_port=self._proxy_port))
-                               
+
                             else:
                                 url = "https://%s/%s/ArcGIS/rest/admin" % (https, portal.portalId)
                                 services.append(Services(url=url,
@@ -283,7 +298,7 @@ class Administration(BaseAGOLClass):
                                              proxy_port=self._proxy_port))
                     elif 'http' in urls['urls']['features']:
                         for http in urls['urls']['features']['http']:
-                          
+
                             if (portal.isPortal == True):
                                 url = "%s/admin" % http
                                 services.append(AGSAdministration(url=url,
@@ -291,20 +306,20 @@ class Administration(BaseAGOLClass):
                                                                   proxy_url=self._proxy_url,
                                                                   proxy_port=self._proxy_port,
                                                                   initialize=True))
-                        
+
                             else:
                                 url = "http://%s/%s/ArcGIS/rest/admin" % (http, portal.portalId)
                                 services.append(Services(url=url,
                                                           securityHandler=self._securityHandler,
                                                           proxy_url=self._proxy_url,
                                                           proxy_port=self._proxy_port))
-                                
+
                     else:
-                        print "Publishing servers not found"                
+                        print( "Publishing servers not found")
                 else:
-                    print "Publishing servers not found"
+                    print ("Publishing servers not found")
             else:
-                print "Publishing servers not found"                        
+                print( "Publishing servers not found")
             return services
         else:
             for server in portal.servers['servers']:

@@ -1,4 +1,5 @@
-import json
+from __future__ import absolute_import
+from __future__ import print_function
 from .._abstract.abstract import BaseAGSServer
 
 ########################################################################
@@ -31,7 +32,7 @@ class KML(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url,
+        json_dict = self._get(url=self._url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
@@ -39,11 +40,11 @@ class KML(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                     if not attr.startswith('__') and \
                     not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented for KML"
+                print( k, " - attribute not implemented for KML")
             del k
             del v
     #----------------------------------------------------------------------
@@ -58,7 +59,7 @@ class KML(BaseAGSServer):
             "f" : "json",
             "kml" : kmz_as_json
         }
-        return self._do_post(url=kmlURL, param_dict=params,
+        return self._post(url=kmlURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)

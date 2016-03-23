@@ -1,5 +1,9 @@
+from __future__ import absolute_import
+from __future__ import print_function
+from ..packages.six.moves import urllib_parse as urlparse
+from ..packages.six.moves.urllib.parse import urlencode
 from .._abstract.abstract import BaseAGSServer
-import urlparse, urllib
+#import urlparse, urllib
 import os
 ########################################################################
 class Uploads(BaseAGSServer):
@@ -50,7 +54,7 @@ class Uploads(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)
@@ -77,18 +81,14 @@ class Uploads(BaseAGSServer):
         if description is not None:
             params['description'] = str(description)
         url = self._url + "/upload"
-        files = []
-        files.append(('file', filePath, os.path.basename(filePath)))
-        parsed = urlparse.urlparse(url)
-        return self._post_multipart(host=parsed.hostname,
-                                       selector=parsed.path,
-                                       files = files,
-                                       fields=params,
-                                       port=parsed.port,
-                                       securityHandler=self._securityHandler,
-                                       ssl=parsed.scheme.lower() == 'https',
-                                       proxy_port=self._proxy_port,
-                                       proxy_url=self._proxy_url)
+        files = {}
+        files['file'] = filePath
+        return self._post(url=url,
+                          param_dict=params,
+                          files=files,
+                          securityHandler=self._securityHandler,
+                          proxy_url=self._proxy_url,
+                          proxy_port=self._proxy_port)
     #----------------------------------------------------------------------
     def delete(self, itemID):
         """
@@ -101,7 +101,7 @@ class Uploads(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_post(url=url, param_dict=params,
+        return self._post(url=url, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -120,13 +120,13 @@ class Uploads(BaseAGSServer):
         params = {
         }
         if len(params.keys()):
-            url =  url + "?%s" % urllib.urlencode(params)
-        return self._download_file(url=url,
-                                   param_dict=params,
-                                   save_path=savePath,
-                                   securityHandler=self._securityHandler,
-                                   proxy_url=self._proxy_url,
-                                   proxy_port=self._proxy_port)
+            url =  url + "?%s" % urlencode(params)
+        return self._get(url=url,
+                         param_dict=params,
+                         out_folder=savePath,
+                         securityHandler=self._securityHandler,
+                         proxy_url=self._proxy_url,
+                         proxy_port=self._proxy_port)
     #----------------------------------------------------------------------
     @property
     def uploads(self):
@@ -138,7 +138,7 @@ class Uploads(BaseAGSServer):
             "f" : "json",
 
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)

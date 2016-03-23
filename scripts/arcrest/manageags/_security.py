@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from .._abstract.abstract import BaseAGSServer
 import json
 ########################################################################
@@ -39,7 +41,7 @@ class Security(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        json_dict = self._do_get(url=self._url, param_dict=params,
+        json_dict = self._get(url=self._url, param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -47,11 +49,11 @@ class Security(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                     if not attr.startswith('__') and \
                     not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, json_dict[k])
             else:
-                print k, " - attribute not implemented in manageags.security."
+                print( k, " - attribute not implemented in manageags.security.")
             del k
             del v
     #----------------------------------------------------------------------
@@ -69,7 +71,7 @@ class Security(BaseAGSServer):
             If the name of the role exists in the role store, an error will
             be returned.
             Input:
-               name - The name of the role. The name must be unique in the
+               rolename - The name of the role. The name must be unique in the
                       role store.
                description - An optional field to add comments or a
                              description for the role.
@@ -78,11 +80,11 @@ class Security(BaseAGSServer):
         """
         params = {
             "f" : "json",
-            "name" : name,
+            "rolename" : name,
             "description" : description
         }
         aURL = self._url + "/roles/add"
-        return self._do_post(url=aURL, param_dict=params,
+        return self._post(url=aURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -111,7 +113,7 @@ class Security(BaseAGSServer):
         if email is not None:
             params['email'] = email
         aURL = self._url + "/users/add"
-        return self._do_post(url=aURL, param_dict=params,
+        return self._post(url=aURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -124,7 +126,7 @@ class Security(BaseAGSServer):
             "users" : users
         }
         rURL = self._url + "/roles/addUsersToRole"
-        return self._do_post(url=rURL, param_dict=params,
+        return self._post(url=rURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -161,7 +163,7 @@ class Security(BaseAGSServer):
             "rolename" : rolename,
             "privilege" : privilege
         }
-        return self._do_post(url=aURL,
+        return self._post(url=aURL,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -187,7 +189,7 @@ class Security(BaseAGSServer):
             "roles" : roles
         }
         uURL = self._url + "/users/assignRoles"
-        return self._do_post(url=uURL, param_dict=params,
+        return self._post(url=uURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -203,7 +205,7 @@ class Security(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_post(url=dURL, param_dict=params,
+        return self._post(url=dURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -225,7 +227,7 @@ class Security(BaseAGSServer):
         params = {
             "f" : "json"
         }
-        return self._do_post(url=eURL, param_dict=params,
+        return self._post(url=eURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -243,7 +245,7 @@ class Security(BaseAGSServer):
             "rolename" : rolename
         }
         pURL = self._url + "/roles/getPrivilege"
-        return self._do_post(url=pURL,
+        return self._post(url=pURL,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -262,7 +264,7 @@ class Security(BaseAGSServer):
             "username" : username
         }
         url = self._url + "/users/getPrivilege"
-        return self._do_post(url=url, param_dict=params,
+        return self._post(url=url, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -287,7 +289,7 @@ class Security(BaseAGSServer):
             "startIndex" : startIndex,
             "pageSize" : pageSize
         }
-        return self._do_post(url=uURL, param_dict=params,
+        return self._post(url=uURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -305,7 +307,7 @@ class Security(BaseAGSServer):
             "f" : "json",
             "privilege" : privilege
         }
-        return self._do_post(url=uURL, param_dict=params,
+        return self._post(url=uURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -329,7 +331,7 @@ class Security(BaseAGSServer):
 
         if maxCount is not None:
             params['maxCount'] = maxCount
-        return self._do_post(url=uURL, param_dict=params,
+        return self._post(url=uURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -355,7 +357,7 @@ class Security(BaseAGSServer):
             "startIndex" : startIndex,
             "pageSize" : pageSize
         }
-        return self._do_post(url=uURL,
+        return self._post(url=uURL,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -381,7 +383,7 @@ class Security(BaseAGSServer):
         if filter is not None and \
            isinstance(filter, str):
             params['filter'] = filter
-        return self._do_post(url=uURL, param_dict=params,
+        return self._post(url=uURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -393,7 +395,7 @@ class Security(BaseAGSServer):
             "f" : "json"
         }
         uURL = self._url + "/psa"
-        return self._do_get(url=uURL, param_dict=params,
+        return self._get(url=uURL, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
@@ -413,7 +415,7 @@ class Security(BaseAGSServer):
             "rolename" : rolename
         }
         uURL = self._url + "/roles/remove"
-        return self._do_post(url=uURL,
+        return self._post(url=uURL,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -436,7 +438,7 @@ class Security(BaseAGSServer):
             "username" : username,
             "roles" : roles
         }
-        return self._do_post(url=uURL, param_dict=params,
+        return self._post(url=uURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -454,7 +456,7 @@ class Security(BaseAGSServer):
             "username" : username
         }
         uURL = self._url + "/users/remove"
-        return self._do_post(url=uURL, param_dict=params,
+        return self._post(url=uURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -474,7 +476,7 @@ class Security(BaseAGSServer):
             "users" : users
         }
         uURL = self._url + "/roles/removeUsersFromRole"
-        return self._do_post(url=uURL, param_dict=params,
+        return self._post(url=uURL, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -488,7 +490,7 @@ class Security(BaseAGSServer):
         "f" : "json"
         }
         uURL = self._url + "/roles"
-        return self._do_get(url=uURL, param_dict=params,
+        return self._get(url=uURL, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
@@ -510,7 +512,7 @@ class Security(BaseAGSServer):
             "maxCount" : maxCount
         }
         uURL = self._url + "/roles/search"
-        return self._do_get(url=uURL, param_dict=params,
+        return self._post(url=uURL, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
@@ -532,7 +534,80 @@ class Security(BaseAGSServer):
             "maxCount" : maxCount
         }
         uURL = self._url + "/users/search"
-        return self._do_get(url=uURL, param_dict=params,
+        return self._post(url=uURL, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
+    #----------------------------------------------------------------------
+    def updatePrimarySiteAdministrator(self, username, password):
+        """
+           Updates account properties of the primary site administrator
+           Input:
+              username - You can optionally provide a new name for the
+              primary site administrator account.
+              password - The password for the new primary site
+              administrator account.
+           Output:
+              JSON message as dictionary
+        """
+        params = {
+            "f" : "json",
+        }
+        if username is not None:
+            params['username'] = username
+        if password is not None:
+            params['password'] = password
+        uURL = self._url + "/psa/update"
+        return self._post(url=uURL, param_dict=params,
+                             securityHandler=self._securityHandler,
+                             proxy_url=self._proxy_url,
+                             proxy_port=self._proxy_port)
+    #----------------------------------------------------------------------
+    def updateRole(self, rolename, description):
+        """ Updates a role description in the role store
+           Input:
+              rolename - the name of the role. The name must be unique in
+                         the role store.
+              description - an optional field to add comments or description
+                            for the role.
+        """
+        params = {
+            "f" : "json",
+            "rolename" : rolename
+        }
+        if description is not None:
+            params['description'] = description
+        uURL = self._url + "/roles/update"
+        return self._post(url=uURL, param_dict=params,
+                             securityHandler=self._securityHandler,
+                             proxy_url=self._proxy_url,
+                             proxy_port=self._proxy_port)
+    #----------------------------------------------------------------------
+    def updateUser(self, username, password, fullname, description, email):
+        """ Updates a user account in the user store
+           Input:
+              username - the name of the user. The name must be unique in
+                         the user store.
+              password - the password for this user.
+              fullname - an optional full name for the user.
+              description - an optional field to add comments or description
+                            for the user account.
+              email - an optional email for the user account.
+        """
+        params = {
+            "f" : "json",
+            "username" : username
+        }
+        if password is not None:
+            params['password'] = password
+        if fullname is not None:
+            params['fullname'] = fullname
+        if description is not None:
+            params['description'] = description
+        if email is not None:
+            params['email'] = email
+        uURL = self._url + "/users/update"
+        return self._post(url=uURL, param_dict=params,
+                             securityHandler=self._securityHandler,
+                             proxy_url=self._proxy_url,
+                             proxy_port=self._proxy_port)

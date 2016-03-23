@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from .._abstract import abstract
 from ..common.geometry import Point, Polyline, Polygon, MultiPoint, Envelope
 import json
@@ -30,14 +32,14 @@ class GeometryService(abstract.BaseAGSServer):
     #----------------------------------------------------------------------
     def __init(self):
         """loads the json values"""
-        res = self._do_get(url=self._url,
+        res = self._get(url=self._url,
                            param_dict={"f": "json"},
                            securityHandler=self._securityHandler,
                            proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)
         self._json_dict = res
         self._json_string = json.dumps(self._json_dict)
-        for k,v in self._json_dict.iteritems():
+        for k,v in self._json_dict.items():
             setattr(self, k, v)
     #----------------------------------------------------------------------
     def __str__(self):
@@ -50,7 +52,7 @@ class GeometryService(abstract.BaseAGSServer):
         """returns the JSON response in key/value pairs"""
         if self._json_dict is None:
             self.__init()
-        for k,v in self._json_dict.iteritems():
+        for k,v in self._json_dict.items():
             yield [k,v]
     #----------------------------------------------------------------------
     def areasAndLengths(self,
@@ -138,7 +140,7 @@ class GeometryService(abstract.BaseAGSServer):
             del p
         else:
             return "No polygons provided, please submit a list of polygon geometries"
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)
@@ -169,7 +171,7 @@ class GeometryService(abstract.BaseAGSServer):
                 else:
                     raise AttributeError("Invalid geometry type")
                 template['geometries'].append(g.asDictionary)
-            del g
+                del g
             return template
         return template
     #----------------------------------------------------------------------
@@ -239,7 +241,7 @@ class GeometryService(abstract.BaseAGSServer):
             params['sr'] = sr
         params['polygons'] = self.__geomToStringArray(polygons)
         params['polylines'] = self.__geomToStringArray(polylines)
-        return self._do_get(url, param_dict=params,
+        return self._get(url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)
@@ -294,7 +296,7 @@ class GeometryService(abstract.BaseAGSServer):
             params['bufferSR'] = bufferSR
         if outSR is not None:
             params['outSR'] = outSR
-        return self._do_get(url, param_dict=params,
+        return self._get(url, param_dict=params,
                             proxy_port=self._proxy_port,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url)
@@ -326,7 +328,7 @@ class GeometryService(abstract.BaseAGSServer):
                                                         "geometries" : self.__geomToStringArray(geometries, "list")}
         else:
             return None
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
@@ -364,7 +366,7 @@ class GeometryService(abstract.BaseAGSServer):
             params['target'] = template
         else:
             AttributeError("You must provide at least 1 Polygon/Polyline geometry in a list")
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
                             proxy_url=self._proxy_url)
@@ -397,7 +399,7 @@ class GeometryService(abstract.BaseAGSServer):
                     raise AttributeError("Invalid geometry type")
                 template['geometries'].append(g.asDictionary)
             params['geometries'] = template
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port = self._proxy_port)
@@ -446,7 +448,7 @@ class GeometryService(abstract.BaseAGSServer):
             raise AttributeError("Invalid geometry type")
         geomTemplate['geometry'] = geometry.asDictionary
         params['geometry'] = geomTemplate
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
                             proxy_url=self._proxy_url)
@@ -470,7 +472,7 @@ class GeometryService(abstract.BaseAGSServer):
         geometry2 = self.__geometryToGeomTemplate(geometry=geometry2)
         params['geometry1'] = geometry1
         params['geometry2'] = geometry2
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -520,7 +522,7 @@ class GeometryService(abstract.BaseAGSServer):
             params['numOfResults'] = numOfResults
         if isinstance(extentOfInterest, Envelope):
             params['extentOfInterest'] = extentOfInterest.asDictionary
-        return self._do_post(url=url, param_dict=params,
+        return self._post(url=url, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -580,7 +582,7 @@ class GeometryService(abstract.BaseAGSServer):
         }
         if not conversionMode is None:
             params['conversionMode'] = conversionMode
-        return self._do_post(url=url, param_dict=params,
+        return self._post(url=url, param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port)
@@ -599,7 +601,7 @@ class GeometryService(abstract.BaseAGSServer):
             "maxDeviation": maxDeviation
         }
         params['geometries'] = self.__geometryListToGeomTemplate(geometries=geometries)
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port,
                             proxy_url=self._proxy_url)
@@ -617,7 +619,7 @@ class GeometryService(abstract.BaseAGSServer):
             "geometries" : self.__geometryListToGeomTemplate(geometries=geometries),
             "geometry" : self.__geometryToGeomTemplate(geometry=geometry)
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)
@@ -634,7 +636,7 @@ class GeometryService(abstract.BaseAGSServer):
             "polygons": self.__geomToStringArray(geometries=polygons,
                                                  returnType="list")
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)
@@ -659,7 +661,7 @@ class GeometryService(abstract.BaseAGSServer):
             "calculationType" : calculationType
         }
 
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)
@@ -690,7 +692,7 @@ class GeometryService(abstract.BaseAGSServer):
             "bevelRatio" : bevelRatio,
             "simplifyResult" : simplifyResult
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                            proxy_port=self._proxy_port)
@@ -711,7 +713,7 @@ class GeometryService(abstract.BaseAGSServer):
             "transformation" : transformation,
             "transformFoward": transformFoward
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
@@ -748,7 +750,7 @@ class GeometryService(abstract.BaseAGSServer):
             "relation" : relation,
             "relationParam" : relationParam
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
@@ -769,7 +771,7 @@ class GeometryService(abstract.BaseAGSServer):
             params["reshaper"] = reshaper.asDictionary
         else:
             raise AttributeError("Invalid reshaper object, must be Polyline")
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
@@ -785,7 +787,7 @@ class GeometryService(abstract.BaseAGSServer):
             "sr" : sr,
             "geometries" : self.__geometryListToGeomTemplate(geometries=geometries)
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
@@ -868,7 +870,7 @@ class GeometryService(abstract.BaseAGSServer):
             params['rounding'] = rounding
         if isinstance(addSpaces, bool):
             params['addSpaces'] = addSpaces
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              proxy_url=self._proxy_url,
                              proxy_port=self._proxy_port,
@@ -893,7 +895,7 @@ class GeometryService(abstract.BaseAGSServer):
 
         }
 
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             proxy_url=self._proxy_url,
                             securityHandler=self._securityHandler,
                             proxy_port=self._proxy_port)
@@ -908,7 +910,7 @@ class GeometryService(abstract.BaseAGSServer):
             "sr" : sr,
             "geometries" : self.__geometryListToGeomTemplate(geometries=geometries)
         }
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)

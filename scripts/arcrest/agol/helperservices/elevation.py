@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from ...ags._geoprocessing import *
 from ...common.geometry import Polygon, Polyline, Point, SpatialReference, Envelope
 from ..._abstract import abstract
@@ -50,7 +51,7 @@ class elevationSync(abstract.BaseAGOLClass):
         params = {
             "f" :"json"
         }
-        res = self._do_get(url=portals_self_url,
+        res = self._get(url=portals_self_url,
                            param_dict=params,
                            securityHandler=self._securityHandler,
                            proxy_url=self._proxy_url,
@@ -127,7 +128,7 @@ class elevation(abstract.BaseAGOLClass):
         params = {
             "f" :"json"
         }
-        res = self._do_get(url=portals_self_url,
+        res = self._get(url=portals_self_url,
                            param_dict=params,
                            securityHandler=self._securityHandler,
                            proxy_url=self._proxy_url,

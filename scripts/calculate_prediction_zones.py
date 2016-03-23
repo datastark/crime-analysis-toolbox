@@ -16,7 +16,10 @@
 # ==================================================
 # calculate_prediction_zones.py BETA
 # --------------------------------------------------
-# requirments: ArcGIS 10.3.1, Python 2.7 #TODO: need to support 3.x and 10.4 as well
+# requirments: ArcMap/Catalog 10.3.1+  with Spatial Analyst,
+#              ArcGIS Pro 1.2+ with Spatial Analyst
+#              ArcGIS Standard license required
+#              Python 2.7 or 3.4
 # author: ArcGIS Solutions
 # contact: ArcGISTeamLocalGov@esri.com
 # company: Esri

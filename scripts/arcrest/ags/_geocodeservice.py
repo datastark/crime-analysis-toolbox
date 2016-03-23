@@ -1,7 +1,9 @@
-from .._abstract.abstract import BaseSecurityHandler, BaseAGSServer
-from ..security.security import AGSTokenSecurityHandler, AGOLTokenSecurityHandler, OAuthSecurityHandler
+from __future__ import absolute_import
+from __future__ import print_function
+from .._abstract.abstract import BaseAGSServer
+from ..security import AGOLTokenSecurityHandler, OAuthSecurityHandler
 from ..common.geometry import Point
-import json, types
+import json
 ########################################################################
 class GeocodeService(BaseAGSServer):
     """
@@ -51,7 +53,7 @@ class GeocodeService(BaseAGSServer):
         params = {
             "f" : "json",
         }
-        json_dict = self._do_get(self._url, params,
+        json_dict = self._get(self._url, params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -60,11 +62,11 @@ class GeocodeService(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, v)
             else:
-                print k, " - attribute not implemented for Geocode Service"
+                print (k, " - attribute not implemented for Geocode Service")
     #----------------------------------------------------------------------
     def __str__(self):
         """returns object as string"""
@@ -224,6 +226,8 @@ class GeocodeService(BaseAGSServer):
             url = self._url + "/find"
             params = {
                 "f" : "json",
+                "text" : text,
+                #"token" : self._securityHandler.token
             }
             if not magicKey is None:
                 params['magicKey'] = magicKey
@@ -231,14 +235,13 @@ class GeocodeService(BaseAGSServer):
                 params['sourceCountry'] = sourceCountry
             if not bbox is None:
                 params['bbox'] = bbox
-            if not location is None and \
-               isinstance(location, Point):
-                params['location'] = location.asDictionary
-            elif not location is None and \
-                 isinstance(location, list):
-                params['location'] = "%s,%s" % (location[0], location[1])
-            if not distance is None:
-                params['distance'] = distance
+            if not location is None:
+                if isinstance(location, Point):
+                    params['location'] = location.asDictionary
+                if isinstance(location, list):
+                    params['location'] = "%s,%s" % (location[0], location[1])
+                if not distance is None:
+                    params['distance'] = distance
             if not outSR is None:
                 params['outSR'] = outSR
             if not category is None:
@@ -251,7 +254,7 @@ class GeocodeService(BaseAGSServer):
                 params['maxLocations'] = maxLocations
             if not forStorage is None:
                 params['forStorage'] = forStorage
-            return self._do_post(url=url,
+            return self._post(url=url,
                                  param_dict=params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
@@ -412,7 +415,7 @@ class GeocodeService(BaseAGSServer):
             params['location'] = location.asDictionary
         elif isinstance(location, list):
             params['location'] = "%s,%s" % (location[0], location[1])
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -483,7 +486,7 @@ class GeocodeService(BaseAGSServer):
         params['sourceCountry'] = sourceCountry
         params['category'] = category
         params['addresses'] = addresses
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -510,7 +513,7 @@ class GeocodeService(BaseAGSServer):
             params['location'] = "%s,%s" % (location[0], location[1])
         else:
             raise Exception("Invalid location")
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -594,7 +597,7 @@ class GeocodeService(BaseAGSServer):
         if not distance is None and \
            isinstance(distance, (int, float)):
             params['distance'] = distance
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,

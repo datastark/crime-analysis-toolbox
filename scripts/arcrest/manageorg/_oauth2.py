@@ -1,8 +1,6 @@
-from ..security.security import OAuthSecurityHandler, AGOLTokenSecurityHandler
+from __future__ import absolute_import
+from __future__ import print_function
 from .._abstract.abstract import BaseAGOLClass
-import os
-import urlparse
-import _parameters as parameters
 
 ########################################################################
 class oauth2(BaseAGOLClass):
@@ -27,6 +25,7 @@ class oauth2(BaseAGOLClass):
             self._referer_url = securityHandler.referer_url
         self._proxy_url = proxy_url
     #----------------------------------------------------------------------
+    @property
     def root(self):
         """ returns the root url for OAuth2 resources """
         return self._url
@@ -75,7 +74,7 @@ class oauth2(BaseAGOLClass):
         }
         if redirect_uris is None:
             params['redirect_uris'] = redirect_uris
-        return self._do_post(url=url,
+        return self._post(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
@@ -93,7 +92,7 @@ class oauth2(BaseAGOLClass):
         params = {
             "f" : "json"
         }
-        return self._do_get(url=url,
+        return self._get(url=url,
                             param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,

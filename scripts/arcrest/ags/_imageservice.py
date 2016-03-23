@@ -1,10 +1,11 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from .._abstract.abstract import BaseSecurityHandler, BaseAGSServer
-from ..security.security import AGSTokenSecurityHandler, PortalServerSecurityHandler
+from ..security import AGSTokenSecurityHandler, PortalServerSecurityHandler
 from ..common.general import MosaicRuleObject, local_time_to_online
 import datetime, urllib
 import json
 from ..common import filters
-from ..security import security
 ########################################################################
 class ImageService(BaseAGSServer):
     """
@@ -96,7 +97,7 @@ class ImageService(BaseAGSServer):
         params = {
             "f" : "json",
         }
-        json_dict = self._do_get(self._url, params,
+        json_dict = self._get(self._url, params,
                                  securityHandler=self._securityHandler,
                                  proxy_url=self._proxy_url,
                                  proxy_port=self._proxy_port)
@@ -105,11 +106,11 @@ class ImageService(BaseAGSServer):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and \
                       not attr.startswith('_')]
-        for k,v in json_dict.iteritems():
+        for k,v in json_dict.items():
             if k in attributes:
                 setattr(self, "_"+ k, v)
             else:
-                print k, " - attribute not implemented for Image Service."
+                print (k, " - attribute not implemented for Image Service.")
     #----------------------------------------------------------------------
     def __str__(self):
         """returns the object as a string"""
@@ -121,7 +122,7 @@ class ImageService(BaseAGSServer):
         """returns the JSON response in key/value pairs"""
         if self._json_dict is None:
             self.__init()
-        for k,v in self._json_dict.iteritems():
+        for k,v in self._json_dict.items():
             yield [k,v]
     #----------------------------------------------------------------------
     @property
@@ -571,25 +572,28 @@ class ImageService(BaseAGSServer):
             params['renderingRule'] = renderingRule
         params["f" ] = f
         if f == "json":
-            return self._do_get(url=url,
+            return self._get(url=url,
                                 param_dict=params,
                                 securityHandler=self._securityHandler,
                                 proxy_port=self._proxy_port,
                                 proxy_url=self._proxy_url)
         elif f == "image":
-            url = url + "?%s"  % urllib.urlencode(params)
-            print url
-            return self._download_file(url=url,
-                                       save_path=saveFolder,
-                                       file_name=saveFile)
+            result = self._get(url=url,
+                               param_dict=params,
+                               securityHandler=self._securityHandler,
+                               proxy_url=self._proxy_url,
+                               proxy_port=self._proxy_port,
+                               out_folder=saveFolder,
+                               file_name=saveFile)
+            return result
         elif f == "kmz":
-            url = url + "?%s"  % urllib.urlencode(params)
-            return self._download_file(url=url,
-                                       save_path=saveFolder,
-                                       securityHandler=self._securityHandler,
-                                       file_name=saveFile,
-                                       proxy_url=self._proxy_url,
-                                       proxy_port=self._proxy_port)
+            return self._get(url=url,
+                             param_dict=params,
+                             securityHandler=self._securityHandler,
+                             proxy_url=self._proxy_url,
+                             proxy_port=self._proxy_port,
+                             out_folder=saveFolder,
+                             file_name=saveFile)
     #----------------------------------------------------------------------
     def query(self,
               where="1=1",
@@ -668,7 +672,7 @@ class ImageService(BaseAGSServer):
             params['returnDistinctValues'] = returnDistinctValues
 
         url = self._url + "/query"
-        return self._do_get(url=url, param_dict=params,
+        return self._get(url=url, param_dict=params,
                             securityHandler=self._securityHandler,
                             proxy_url=self._proxy_url,
                             proxy_port=self._proxy_port)
@@ -799,7 +803,7 @@ class ImageService(BaseAGSServer):
             params['itemIds'] = itemIds
         if not serviceUrl is None:
             params['serviceUrl'] = serviceUrl
-        return self._do_post(url=url,
+        return self._post(url=url,
                              param_dict=params,
                              securityHandler=self._securityHandler,
                              proxy_url=self._proxy_url,
@@ -816,7 +820,7 @@ class ImageService(BaseAGSServer):
             params = {
                 "f" : "json"
             }
-            return self._do_get(url=url,
+            return self._get(url=url,
                                 param_dict=params,
                                 securityHandler=self._securityHandler,
                                 proxy_url=self._proxy_url,
