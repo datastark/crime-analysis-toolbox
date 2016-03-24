@@ -421,7 +421,9 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
         # Save final probability raster where values are > 0
         sum_raster = arcpy.sa.SetNull(sum_raster, sum_raster, "Value <= 0")
-        sum_raster.save(''.join([out_raster, os.sep, 'p', now]))
+        out_raster_name = ''.join([out_raster, os.sep, 'p', now])
+        sum_raster.save(out_raster_name)
+        arcpy.SetParameterAsText(18, out_raster_name)
 
         # Slice raster values into categories and convert to temp polys
         temp_polys = convert_raster_to_zones(sum_raster, slice_num,
@@ -445,6 +447,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
         # Append temp poly features to output polygon fc
         arcpy.Append_management(temp_polys, out_polygon)
+        arcpy.SetParameterAsText(17, out_polygon)
 
         # Update polygon services.
         # If pubtype = NONE or SERVER, no steps necessary
@@ -454,7 +457,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
             try:
                 fl = connect_to_layer(username, password, server_url, poly_url)
             except:
-                raise Exception('Could not connect to service. Please verify '
+                raise Exception('Could not update service. Please verify '
                                 'organization URL and service URL are '
                                 'correct, and the provided username and '
                                 'password have access to the service.')
