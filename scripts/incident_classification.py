@@ -13,10 +13,12 @@
 # limitations under the License.
 # -----------------------------------------------------------------------------
 
+# D:\CrimeAnalysis\testData.gdb\SpencerData newdates D:\CrimeAnalysis\output 1000;750;500;250 28;7;14;21 10 D:\CrimeAnalysis\testData.gdb connectiontest D:\CrimeAnalysis\testData.gdb\SpencerData
+
 # ==================================================
 # incident_classification.py BETA
 # --------------------------------------------------
-# requirments: ArcMap/Catalog 10.3.1+
+# requirments: ArcMap/ArcCatalog 10.3.1+
 #              ArcGIS Pro 1.2+
 #              ArcGIS Advanced license required
 #              Python 2.7 or 3.4
@@ -36,7 +38,7 @@ import arcpy
 from datetime import datetime as dt
 from datetime import timedelta as td
 from os import path
-import traceback
+##import traceback
 
 # Added field names
 spatial_band_field = 'SPATIALBAND'
@@ -399,23 +401,11 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
         print(msgs)
 
     except:
-        # Get the traceback object
-        tb = sys.exc_info()[2]
-        tbinfo = traceback.format_tb(tb)[0]
-
-        # Concatenate information together concerning the error
-        # into a message string
-        pymsg = ("PYTHON ERRORS:\nTraceback info:\n" + tbinfo +
-                 "\nError Info:\n" + str(sys.exc_info()[1]))
-        msgs = "ArcPy ERRORS:\n" + arcpy.GetMessages() + "\n"
-
-        # Return python error messages for use in script tool or Python Window
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
+        # Return  error messages for use in script tool or Python Window
+        arcpy.AddError(str(sys.exc_info()[1]))
 
         # Print Python error messages for use in Python / Python Window
-        print(pymsg + "\n")
-        print(msgs)
+        print(str(sys.exc_info()[1]) + "\n")
 
 
 if __name__ == '__main__':

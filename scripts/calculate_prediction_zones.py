@@ -254,8 +254,8 @@ def create_zone_fc(template, sr, out_path):
 
 
 def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
-         temporal_band_size, temporal_half, probability_type, slice_num,
-         out_raster, out_polygon, pub_polys='', pub_type='', username='',
+         temporal_band_size, temporal_half, probability_type, out_raster,
+         out_polygon, slice_num, pub_polys='', pub_type='', username='',
          password='', server_url='', poly_url='', *args):
 
     """ Generates a raster and series of polygons based on that raster to
@@ -293,10 +293,6 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
                           'MAXIMUM' creates a surface representing the maximum
                           risk value from each incident.
 
-        slice_num: Integer value representing the number of zones that will be
-                   created from the prediction raster. Each zone will represent
-                   a range of prediction risk values.
-
         out_raster: Location for output incident prediction surface raster.
                     Raster name will have timestamp.
 
@@ -304,6 +300,10 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
                         out_raster values into slice_num categories.
                         Polygon boundaries represent the bounds of the
                         prediction zones as defined by the raster slices.
+
+        slice_num: Integer value representing the number of zones that will be
+                   created from the prediction raster. Each zone will represent
+                   a range of prediction risk values.
 
         pub_polys: booleen option for publishing the polygon features. Service
                    must exist previously. Service will be truncated and the
@@ -377,7 +377,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
         arcpy.AddMessage("Processing incidents from {} to {}...".format(date_min, init_date))
 
         # Create risk rasters for each incident within temporal reach of today
-        sql = """{0} <= date'{1}' AND {0} >= date'{2}'""".format(date_field,
+        sql = """{0} <= date'{1}' AND {0} > date'{2}'""".format(date_field,
                                                                  init_date,
                                                                  date_min)
         with arcpy.da.SearchCursor(incident_fc,
