@@ -16,9 +16,9 @@
 # ==================================================
 # calculate_prediction_zones.py BETA
 # --------------------------------------------------
-# requirments: ArcMap/Catalog 10.3.1+  with Spatial Analyst,
+# requirments: ArcMap/ArcCatalog 10.3.1+ with Spatial Analyst,
 #              ArcGIS Pro 1.2+ with Spatial Analyst
-#              ArcGIS Standard license required
+#              ArcGIS Standard or Advanced license required
 #              Python 2.7 or 3.4
 # author: ArcGIS Solutions
 # contact: ArcGISTeamLocalGov@esri.com
@@ -38,7 +38,7 @@ from datetime import date as dy
 from datetime import timedelta as td
 from os import path
 import os
-import traceback
+##import traceback
 import math
 
 from arcrest.security import AGOLTokenSecurityHandler
@@ -343,6 +343,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
         else:
             try:
                 init_date = dt.strptime(init_date, "%Y-%m-%d")
+##                init_date = init_date.date()
             except ValueError:
                 raise Exception("Invalid date format. Initial Date must be in the format yyyy-mm-dd.")
 
@@ -373,6 +374,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
         # Calculate minimum bounds of accepted time frame
         date_min = init_date - td(days=int(temporal_band_size))
+        arcpy.AddMessage("Processing incidents from {} to {}...".format(date_min, init_date))
 
         # Create risk rasters for each incident within temporal reach of today
         sql = """{0} <= date'{1}' AND {0} >= date'{2}'""".format(date_field,
@@ -386,7 +388,10 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
             for incident in incidents:
 
                 # Calculate age of incident
-                date_diff = init_date - incident[1].date()
+                try:
+                    date_diff = init_date - incident[1].date()
+                except TypeError:
+                    date_diff = init_date.date() - incident[1].date()
 
                 # Build float distance raster for incident
                 sql = """{} = {}""".format(oidname, incident[0])
@@ -410,7 +415,9 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
                 count += 1
 
         if not count:
-            raise Exception('No incidents found in between {} and {}'.format(date_min, init_date))
+            raise Exception('No incidents found between {} and {}'.format(date_min, init_date))
+        else:
+            arcpy.AddMessage("{} incidents found.".format(count))
 
         # Save final probability raster where values are > 0
         sum_raster = arcpy.sa.SetNull(sum_raster, sum_raster, "Value <= 0")
@@ -483,23 +490,12 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
         print(msgs)
 
     except:
-        # Get the traceback object
-        tb = sys.exc_info()[2]
-        tbinfo = traceback.format_tb(tb)[0]
 
-        # Concatenate information together concerning the error
-        # into a message string
-        pymsg = ("PYTHON ERRORS:\nTraceback info:\n" + tbinfo +
-                 "\nError Info:\n" + str(sys.exc_info()[1]))
-        msgs = "ArcPy ERRORS:\n" + arcpy.GetMessages() + "\n"
-
-        # Return python error messages for use in script tool or Python Window
-        arcpy.AddError(pymsg)
-        arcpy.AddError(msgs)
+        # Return  error messages for use in script tool or Python Window
+        arcpy.AddError(str(sys.exc_info()[1]))
 
         # Print Python error messages for use in Python / Python Window
-        print(pymsg + "\n")
-        print(msgs)
+        print("\n" + str(sys.exc_info()[1]) + "\n")
 
 
     finally:
