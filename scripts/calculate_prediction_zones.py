@@ -28,7 +28,7 @@
 #              occurance of a repeat or near repeat incident
 # ==================================================
 # history:
-# 03/23/2016 - AM - beta
+# 03/25/2016 - AM - beta
 # ==================================================
 
 import arcpy
@@ -323,6 +323,10 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
     """
 
     try:
+        i = 0
+        arcpy.SetProgressor("default")
+        arcpy.SetProgressorLabel('Initializing...')
+
         # Check out spatial analyst extentsion
         if arcpy.CheckExtension("Spatial") == "Available":
             arcpy.CheckOutExtension("Spatial")
@@ -343,7 +347,6 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
         else:
             try:
                 init_date = dt.strptime(init_date, "%Y-%m-%d")
-##                init_date = init_date.date()
             except ValueError:
                 raise Exception("Invalid date format. Initial Date must be in the format yyyy-mm-dd.")
 
@@ -374,18 +377,22 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
         # Calculate minimum bounds of accepted time frame
         date_min = init_date - td(days=int(temporal_band_size))
-        arcpy.AddMessage("Processing incidents from {} to {}...".format(date_min, init_date))
 
         # Create risk rasters for each incident within temporal reach of today
         sql = """{0} <= date'{1}' AND {0} > date'{2}'""".format(date_field,
                                                                  init_date,
                                                                  date_min)
+        numrows = 0
+        with arcpy.da.SearchCursor(incident_fc,"OID@", where_clause=sql) as rows:
+            for row in rows:
+                numrows+= 1
+
         with arcpy.da.SearchCursor(incident_fc,
                                    ['OID@', date_field],
                                    where_clause=sql) as incidents:
             count = 0
-
             for incident in incidents:
+                arcpy.SetProgressorLabel('Calculating influence of incident {} of {}...'.format(count+1, numrows))
 
                 # Calculate age of incident
                 try:
@@ -420,12 +427,16 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
             arcpy.AddMessage("{} incidents found.".format(count))
 
         # Save final probability raster where values are > 0
+        arcpy.SetProgressorLabel('Saving final raster...')
+
         sum_raster = arcpy.sa.SetNull(sum_raster, sum_raster, "Value <= 0")
         out_raster_name = ''.join([out_raster, os.sep, 'p', now])
         sum_raster.save(out_raster_name)
         arcpy.SetParameterAsText(18, out_raster_name)
 
         # Slice raster values into categories and convert to temp polys
+        arcpy.SetProgressorLabel('Creating polygons...')
+
         temp_polys = convert_raster_to_zones(sum_raster, slice_num,
                                              cur_status_field, cur_date_field)
 
@@ -451,7 +462,9 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
         # Update polygon services.
         # If pubtype = NONE or SERVER, no steps necessary
+
         if pub_type in ['ARCGIS_ONLINE', 'ARCGIS_PORTAL'] and pub_polys:
+            arcpy.SetProgressorLabel('Updating polygon feature service...')
 
             # connect to incidents service
             try:
@@ -485,6 +498,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
             # Add new 'current' features
             fl.addFeatures(temp_polys)
+            print dt.now()
 
     except arcpy.ExecuteError:
         # Get the tool error messages
@@ -502,6 +516,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
 
     finally:
+        arcpy.SetProgressorLabel('Completed.')
         arcpy.CheckInExtension("Spatial")
 
 
