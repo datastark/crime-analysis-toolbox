@@ -38,7 +38,6 @@ from datetime import date as dy
 from datetime import timedelta as td
 from os import path
 import os
-##import traceback
 import math
 
 from arcrest.security import AGOLTokenSecurityHandler

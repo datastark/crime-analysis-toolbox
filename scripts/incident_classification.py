@@ -391,7 +391,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
             report.write(percent_table)
 
         arcpy.SetParameterAsText(9, path.join(out_lines_dir, out_lines_name))
-        arcpy.SetParameterAsText(10, reportname)
+        arcpy.AddMessage("View incident summary report: {}".format(reportname))
 
 
     except arcpy.ExecuteError:
