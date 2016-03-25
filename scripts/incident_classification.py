@@ -57,7 +57,7 @@ def reset_fields(fc):
 
     delete_fields = []
 
-    for field in['NEAR_FID', 'NEAR_DIST', 'tempdist', spatial_band_field,
+    for field in['NEAR_FID', 'NEAR_DIST', 'DISTTOORIG', spatial_band_field,
                  temporal_band_field, incident_type_field, origin_feat_field,
                  z_value_field]:
         if field in inc_fields:
@@ -77,7 +77,7 @@ def reset_fields(fc):
                               field_type='FLOAT')
     # Add field for distance to origin
     arcpy.AddField_management(fc,
-                              field_name="tempdist",
+                              field_name="DISTTOORIG",
                               field_type='FLOAT')
 
     # Add field for temporal band
@@ -204,7 +204,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                                                                   spatial_bands[-1])
             arcpy.SelectLayerByAttribute_management(rnr_features,
                                                     where_clause=where_clause)
-            arcpy.CalculateField_management(rnr_features, 'tempdist',
+            arcpy.CalculateField_management(rnr_features, 'DISTTOORIG',
                                             '!NEAR_DIST!', 'PYTHON_9.3')
             arcpy.CalculateField_management(rnr_features, origin_feat_field,
                                             '!NEAR_FID!', 'PYTHON_9.3')
@@ -213,7 +213,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
         oids = []
         rnrids = []
 
-        fields = ["OID@", origin_feat_field, "tempdist", incident_type_field,
+        fields = ["OID@", origin_feat_field, "DISTTOORIG", incident_type_field,
                   spatial_band_field, temporal_band_field, date_field,
                   z_value_field, 'SHAPE@X', 'SHAPE@Y']
 
@@ -299,7 +299,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
 
         # Classify & count incidents by type and band
         origins = list(set(oids) - set(rnrids))
-        fields = ["OID@", 'tempdist', incident_type_field, origin_feat_field,
+        fields = ["OID@", 'DISTTOORIG', incident_type_field, origin_feat_field,
                   spatial_band_field, temporal_band_field]
 
         with arcpy.da.UpdateCursor(in_features, fields) as rows:
@@ -310,7 +310,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                 elif not row[3]:
                     pass
                 elif row[3] > 0:
-                    if not row[1]:
+                    if not row[4]:
                         pass
                     elif row[1] <= repeatdist:
                         row[2] = 'R'
@@ -325,7 +325,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                 rows.updateRow(row)
 
         # Delete near fields
-        arcpy.DeleteField_management(in_features, 'NEAR_FID;NEAR_DIST;tempdist')
+        arcpy.DeleteField_management(in_features, 'NEAR_FID;NEAR_DIST')
 
         # Build report content
         perc_o = 100*orig_cnt/inc_cnt
