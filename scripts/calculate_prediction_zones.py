@@ -497,7 +497,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
             # Add new 'current' features
             fl.addFeatures(temp_polys)
-            print dt.now()
+            print(dt.now())
 
     except arcpy.ExecuteError:
         # Get the tool error messages
