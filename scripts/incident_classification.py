@@ -46,6 +46,13 @@ temporal_band_field = 'TEMPORALBAND'
 incident_type_field = 'INCCLASS'
 origin_feat_field = 'ORIGIN'
 z_value_field = 'ZVALUE'
+dist_orig_field = "DISTTOORIG"
+
+units = {"Meter": "m",
+         "Foot_US": "ft",
+         "Foot": "ft",
+         "150_Kilometers": "x 150km",
+         "50_Kilometers": "x 50km"}
 
 
 def reset_fields(fc):
@@ -57,7 +64,7 @@ def reset_fields(fc):
 
     delete_fields = []
 
-    for field in['NEAR_FID', 'NEAR_DIST', 'DISTTOORIG', spatial_band_field,
+    for field in['NEAR_FID', 'NEAR_DIST', dist_orig_field, spatial_band_field,
                  temporal_band_field, incident_type_field, origin_feat_field,
                  z_value_field]:
         if field in inc_fields:
@@ -77,7 +84,7 @@ def reset_fields(fc):
                               field_type='FLOAT')
     # Add field for distance to origin
     arcpy.AddField_management(fc,
-                              field_name="DISTTOORIG",
+                              field_name=dist_orig_field,
                               field_type='FLOAT')
 
     # Add field for temporal band
@@ -204,7 +211,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                                                                   spatial_bands[-1])
             arcpy.SelectLayerByAttribute_management(rnr_features,
                                                     where_clause=where_clause)
-            arcpy.CalculateField_management(rnr_features, 'DISTTOORIG',
+            arcpy.CalculateField_management(rnr_features, dist_orig_field,
                                             '!NEAR_DIST!', 'PYTHON_9.3')
             arcpy.CalculateField_management(rnr_features, origin_feat_field,
                                             '!NEAR_FID!', 'PYTHON_9.3')
@@ -213,7 +220,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
         oids = []
         rnrids = []
 
-        fields = ["OID@", origin_feat_field, "DISTTOORIG", incident_type_field,
+        fields = ["OID@", origin_feat_field, dist_orig_field, incident_type_field,
                   spatial_band_field, temporal_band_field, date_field,
                   z_value_field, 'SHAPE@X', 'SHAPE@Y']
 
@@ -299,7 +306,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
 
         # Classify & count incidents by type and band
         origins = list(set(oids) - set(rnrids))
-        fields = ["OID@", 'DISTTOORIG', incident_type_field, origin_feat_field,
+        fields = ["OID@", dist_orig_field, incident_type_field, origin_feat_field,
                   spatial_band_field, temporal_band_field]
 
         with arcpy.da.UpdateCursor(in_features, fields) as rows:
@@ -327,6 +334,13 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
         # Delete near fields
         arcpy.DeleteField_management(in_features, 'NEAR_FID;NEAR_DIST')
 
+        # Get unit of feature class spatial reference system
+        try:
+            unit = units[sr.linearUnitName]
+        except KeyError:
+            unit = ''
+
+
         # Build report content
         perc_o = 100*orig_cnt/inc_cnt
         perc_nr = 100*nrpt_cnt/inc_cnt
@@ -348,7 +362,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                                                     nrpt_cnt, perc_nr,
                                                     rpt_cnt, perc_r))
 
-        temp_band_strs = [str(b) for b in temporal_bands]
+        temp_band_strs = ["{} days".format(b) for b in temporal_bands]
         temporal_band_labels = ','.join(temp_band_strs)
         counts_header = ('Number of Repeat and Near-Repeat incidents per spatial and temporal band\n'
                          ',{}\n'.format(temporal_band_labels))
@@ -359,8 +373,8 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
         percent_table = ""
         for sband in spatial_bands:
             # row leader
-            band_count = str(sband)
-            band_perc = str(sband)
+            band_count = "{} {}".format(sband, unit)
+            band_perc = "{} {}".format(sband, unit)
 
             # get temporal bands and their incident counts
             vals = band_counts[sband]
