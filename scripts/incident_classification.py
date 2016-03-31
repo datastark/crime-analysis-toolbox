@@ -160,8 +160,9 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
 
         arcpy.env.overwriteOutput = True
 
-        # Report run time used for file names etc
+        # Report run time used for file names
         now = dt.strftime(dt.now(), "%Y-%m-%d_%H-%M-%S")
+        now_nice = dt.strftime(dt.now(), "%Y-%m-%d %H:%M:%S")
 
         # Check for and delete existing fields necessary for classification
         reset_fields(in_features)
@@ -347,10 +348,10 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
         perc_r = 100*rpt_cnt/inc_cnt
 
         report_header = ('Repeat and Near Repeat Incident Summary\n'
-                         'Created {}\n'.format(now))
+                         'Created {}\n'.format(now_nice))
 
         data_info = ('Data Source: {}\n'
-                     'Date Range: {}-{}\n'.format(in_features, min_date, max_date))
+                     'Incident Date Range: {} - {}\n'.format(in_features, min_date, max_date))
 
         inc_type_report = ('Count and percentage of each type of incident\n'
                            ', Count, Percentage\n'
