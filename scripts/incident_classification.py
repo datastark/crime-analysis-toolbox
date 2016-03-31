@@ -155,6 +155,9 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
         repeatdist = float(repeatdist)
         spatial_bands.append(repeatdist)
 
+        spatial_bands = list(set(spatial_bands))
+        temporal_bands = list(set(temporal_bands))
+
         spatial_bands.sort()
         temporal_bands.sort()
 
@@ -343,9 +346,9 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
 
 
         # Build report content
-        perc_o = 100*orig_cnt/inc_cnt
-        perc_nr = 100*nrpt_cnt/inc_cnt
-        perc_r = 100*rpt_cnt/inc_cnt
+        perc_o = "{0:.2f}".format(100.0*float(orig_cnt)/inc_cnt)
+        perc_nr = "{0:.2f}".format(100.0*float(nrpt_cnt)/inc_cnt)
+        perc_r = "{0:.2f}".format(100.0*float(rpt_cnt)/inc_cnt)
 
         report_header = ('Repeat and Near Repeat Incident Summary\n'
                          'Created {}\n'.format(now_nice))
@@ -363,7 +366,7 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                                                     nrpt_cnt, perc_nr,
                                                     rpt_cnt, perc_r))
 
-        temp_band_strs = ["{} days".format(b) for b in temporal_bands]
+        temp_band_strs = ["< {} days".format(b) for b in temporal_bands]
         temporal_band_labels = ','.join(temp_band_strs)
         counts_header = ('Number of Repeat and Near-Repeat incidents per spatial and temporal band\n'
                          ',{}\n'.format(temporal_band_labels))
@@ -372,22 +375,25 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
 
         counts_table = ""
         percent_table = ""
+
+        row_sum = [0 for tband in temporal_bands]
+
         for sband in spatial_bands:
-            # row leader
-            band_count = "{} {}".format(sband, unit)
-            band_perc = "{} {}".format(sband, unit)
 
             # get temporal bands and their incident counts
             vals = band_counts[sband]
 
             # Get spatial band count in each temporal band
-            for tband in temporal_bands:
-                band_count += ',{}'.format(vals[tband])
-                band_perc += ',{}'.format(100*vals[tband]/inc_cnt)
+            # Sums include counts from smaller bands
+            row_counts = [vals[tband] for tband in temporal_bands]
+            row_sums = [sum(row_counts[0:i]) for i in xrange(1,len(row_counts)+1)]
 
-            # append counts to the table
-            counts_table += '{}\n'.format(band_count)
-            percent_table += '{}\n'.format(band_perc)
+            row_sum = [x + y for (x, y) in zip(row_sums, row_sum)]
+            row_perc = [100.0 * float(val)/inc_cnt for val in row_sum]
+
+            # append counts & percentages to the table
+            counts_table += '< {} {},{}\n'.format(sband, unit, ','.join([str(cnt) for cnt in row_sum]))
+            percent_table += '< {} {},{}\n'.format(sband, unit, ','.join(["{0:.2f}".format(prc) for prc in row_perc]))
 
         # Write report
         reportname = path.join(report_location, "{}_{}.csv".format('Summary', now))
