@@ -110,9 +110,9 @@ def calculate_band(value, bands):
             return band
 
 
-def classify_incidents(in_features, date_field, report_location, spatial_bands,
-                       temporal_bands, repeatdist, out_lines_dir, out_lines_name,
-                       *args):
+def classify_incidents(in_features, date_field, report_location, repeatdist,
+                       spatial_bands, temporal_bands, out_lines_dir,
+                       out_lines_name, *args):
     """Updates an input feature class to classify features according to their
        proximity in space and time to previous incidents
 
@@ -126,6 +126,10 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
        report_location: Directory on disk where a summary report (csv) of the
                         processed incidents can be written.
 
+       repeatdist: Distance in the units of in_features below which adjacent
+                   incidents are considered repeats rather than near-repeats.
+                   Default value is 0.
+
        spatial_bands: semi-colon separated list of distances in the unit of the
                       in_features. Features will be classified according to
                       the smallest value that exceeds their proximity in space
@@ -138,10 +142,6 @@ def classify_incidents(in_features, date_field, report_location, spatial_bands,
                        will be classified according to the smallest listed
                        value that exceeds their proximity in time to their
                        nearest spatial neighbour.
-
-       repeatdist: Distance in the units of in_features below which adjacent
-                   incidents are considered repeats rather than near-repeats.
-                   Default value is 0.
 
        out_lines_dir: The workspace where the line features will be stored
 
