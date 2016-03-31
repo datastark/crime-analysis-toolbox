@@ -28,7 +28,6 @@ The Crime Analysis Toolbox contains a series of tools for identifying and analyz
 
 ### General Help
 * [New to Github? Get started here.][]
-* [Want more info on this app? Check out the documentation.][]
 
 ## Resources
 
@@ -54,5 +53,5 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 A copy of the license is available in the repository's [LICENSE.txt][] file.
 
-[](Esri Tags: ArcGISSolutions State-Government Local-Government State Local Government Online Apps Constituent Engagement)
-[](Esri Language: JavaScript)
+[](Esri Tags: ArcGISSolutions Local-Government)
+[](Esri Language: Python)
