@@ -1,29 +1,38 @@
+[New to Github? Get started here.]: http://htmlpreview.github.com/?https://github.com/Esri/esri.github.com/blob/master/help/esri-getting-to-know-github.html
+[ArcGIS for Local Government maps and apps]: http://solutions.arcgis.com/local-government
 [guidelines for contributing]: https://github.com/esri/contributing
 [LICENSE.txt]: LICENSE.txt
 
 # crime-analysis-toolbox
 
-The Crime Analysis Toolbox contains a series of ArcGIS geoprocessing tools and models for identifying and analyzing
-crime incident data 
+The Crime Analysis Toolbox contains a series of tools for identifying and analyzing patterns in incident data
 
-## Features
+## Tools
+* Incident Classification tool: Identify originating, repeat, or near-repeat incidents and view their connections in time and space.
+* Prediction Zone tool: Identify areas most at risk for repeat and near-repeat incidents, and update a service with these areas.
 
 ## Requirements
 
 ### Experience
 
+* Authoring maps
+* Running geoprocessing tools
+* Publishing services
+
 ### Software
-
-### Browser Compatibility
-
+* ArcMap 10.3.1+ or ArcGIS Pro 1.2+ with Advanced license
+* Spatial Analyst extension
+* Python 2.7 or 3.4
 
 ## Instructions
 
 ### General Help
-
-### Deploying
+* [New to Github? Get started here.][]
+* [Want more info on this app? Check out the documentation.][]
 
 ## Resources
+
+Learn more about Esri's [ArcGIS for Local Government maps and apps][].
 
 ## Issues
 
@@ -35,7 +44,7 @@ Esri welcomes contributions from anyone and everyone. Please see our [guidelines
 
 ## Licensing
 
-Copyright 2014 Esri
+Copyright 2016 Esri
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
@@ -45,5 +54,5 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 A copy of the license is available in the repository's [LICENSE.txt][] file.
 
-[](Esri Tags: ArcGISSolutions Local-Government Local Government)
-[](Esri Language: Python)
+[](Esri Tags: ArcGISSolutions State-Government Local-Government State Local Government Online Apps Constituent Engagement)
+[](Esri Language: JavaScript)
