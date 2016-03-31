@@ -51,6 +51,7 @@ arcpy.env.overwriteOutput = True
 # Status fields for output polygons (created if non-existant)
 cur_status_field = 'MOSTRECENT'
 cur_date_field = 'CREATEDATE'
+risk_range_field = "RISKRANGE"
 
 # Get current date & time
 today = dy.today()
@@ -174,11 +175,15 @@ def add_status_fields_to_lyr(lyr):
     if cur_date_field not in fields:
         arcpy.AddField_management(lyr, cur_date_field, 'DATE')
 
-    if 'gridcode' not in fields:
-        arcpy.AddField_management(lyr, 'gridcode', 'LONG')
+##    if 'gridcode' not in fields:
+##        arcpy.AddField_management(lyr, 'gridcode', 'LONG')
+##
+##    if 'Id' not in fields:
+##        arcpy.AddField_management(lyr, 'Id', 'LONG')
 
-    if 'Id' not in fields:
-        arcpy.AddField_management(lyr, 'Id', 'LONG')
+    if risk_range_field not in fields:
+        arcpy.AddField_management(lyr, risk_range_field, 'LONG')
+
 
 # End of add_status_fields_to_lyr function
 
@@ -210,6 +215,16 @@ def add_status_field_to_service(fl):
                 "domain": None,
                 "defaultValue": None})
 
+    if risk_range_field not in layer_fields:
+        fieldToAdd["fields"].append({
+                "name": risk_range_field,
+                "type": "esriFieldTypeInteger",
+                "alias": risk_range_field,
+                "nullable": True,
+                "editable": True,
+                "domain": None,
+                "defaultValue": None})
+
     fl.administration.addToDefinition(fieldToAdd)
 
 # End of add_status_field_to_service function
@@ -225,12 +240,15 @@ def convert_raster_to_zones(raster, bins, status_field, date_field):
                                              "NO_SIMPLIFY")
     add_status_fields_to_lyr(polys)
 
-    with arcpy.da.UpdateCursor(polys, [status_field, date_field]) as rows:
+    fields = [status_field, date_field, risk_range_field, "gridcode"]
+    with arcpy.da.UpdateCursor(polys, fields) as rows:
         for row in rows:
             row[0] = 'True'
             row[1] = todaytime
+            row[2] = row[3]
             rows.updateRow(row)
 
+    arcpy.DeleteField_management(polys, ["Id","gridcode"])
     return polys
 
 # End of convert_raster_to_zones function
@@ -474,7 +492,7 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
                                 'correct, and the provided username and '
                                 'password have access to the service.')
 
-            # Check service for status and creation fields - add if necessary
+            # Check service for status, creation, risk fields. add if necessary
             add_status_field_to_service(fl)
 
             # Update 'current' features in service to be 'past'
@@ -497,7 +515,6 @@ def main(in_features, date_field, init_date, spatial_band_size, spatial_half,
 
             # Add new 'current' features
             fl.addFeatures(temp_polys)
-            print(dt.now())
 
     except arcpy.ExecuteError:
         # Get the tool error messages
