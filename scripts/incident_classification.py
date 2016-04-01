@@ -348,9 +348,9 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
 
 
         # Build report content
-        perc_o = "{0:.2f}".format(100.0*float(orig_cnt)/inc_cnt)
-        perc_nr = "{0:.2f}".format(100.0*float(nrpt_cnt)/inc_cnt)
-        perc_r = "{0:.2f}".format(100.0*float(rpt_cnt)/inc_cnt)
+        perc_o = "{0:.1f}".format(100.0*float(orig_cnt)/inc_cnt)
+        perc_nr = "{0:.1f}".format(100.0*float(nrpt_cnt)/inc_cnt)
+        perc_r = "{0:.1f}".format(100.0*float(rpt_cnt)/inc_cnt)
 
         report_header = ('Repeat and Near Repeat Incident Summary\n'
                          'Created {}\n'.format(now_nice))
