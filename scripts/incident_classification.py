@@ -275,6 +275,8 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
                     # Save line segment
                     end = arcpy.Point(X=nearfeat[8], Y=nearfeat[9], Z=nearfeat[7])
                     start = arcpy.Point(X=o_x, Y=o_y, Z=o_z_value.days)
+##                    end = arcpy.Point(X=nearfeat[8], Y=nearfeat[9], Z=(nearfeat[7]*10))
+##                    start = arcpy.Point(X=o_x, Y=o_y, Z=(o_z_value.days*10))
                     vertices = arcpy.Array([start, end])
                     feature = arcpy.Polyline(vertices, None, True, False)
                     new_lines.append([datediff.days, feature])
@@ -365,16 +367,33 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
                                                     orig_cnt, perc_o,
                                                     nrpt_cnt, perc_nr,
                                                     rpt_cnt, perc_r))
+        console_type_rpt = ('Count and percentage of each type of incident\n'
+                           '                  Count      Percentage\n'
+                           'All Incidents   {:^10} {:^13}\n'
+                           'Originators     {:^10} {:^13}\n'
+                           'Near Repeats    {:^10} {:^13}\n'
+                           'Repeats         {:^10} {:^13}\n'.format(inc_cnt, 100,
+                                                                  orig_cnt, perc_o,
+                                                                  nrpt_cnt, perc_nr,
+                                                                  rpt_cnt, perc_r))
 
-        temp_band_strs = ["< {} days".format(b) for b in temporal_bands]
+        temp_band_strs = ["<{} days".format(b) for b in temporal_bands]
         temporal_band_labels = ','.join(temp_band_strs)
-        counts_header = ('Number of Repeat and Near-Repeat incidents per spatial and temporal band\n'
-                         ',{}\n'.format(temporal_band_labels))
-        percent_header = ('Percentage of all incidents classified as Repeat or Near-Repeat and appearing in each spatial and temporal band\n'
-                          ',{}\n'.format(temporal_band_labels))
+        console_tband_labels = ' '.join(['{:^12}'.format(bnd) for bnd in temp_band_strs])
+
+        counts_title = 'Number of Repeat and Near-Repeat incidents per spatial and temporal band\n'
+        percent_title = 'Percentage of all incidents classified as Repeat or Near-Repeat and appearing in each spatial and temporal band\n'
+
+        counts_header = ',{}\n'.format(temporal_band_labels)
+        console_counts_header = '                 {}'.format(console_tband_labels)
+
+        percent_header = ',{}\n'.format(temporal_band_labels)
+        console_perc_header = '                 {}'.format(console_tband_labels)
 
         counts_table = ""
         percent_table = ""
+        console_count = ""
+        console_perc = ""
 
         row_sum = [0 for tband in temporal_bands]
 
@@ -392,8 +411,10 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
             row_perc = [100.0 * float(val)/inc_cnt for val in row_sum]
 
             # append counts & percentages to the table
-            counts_table += '< {} {},{}\n'.format(sband, unit, ','.join([str(cnt) for cnt in row_sum]))
-            percent_table += '< {} {},{}\n'.format(sband, unit, ','.join(["{0:.2f}".format(prc) for prc in row_perc]))
+            counts_table += '<{} {},{}\n'.format(sband, unit, ','.join([str(cnt) for cnt in row_sum]))
+            console_count += '{:>16} {}\n'.format('<{} {}'.format(sband, unit), ' '.join(['{:^12}'.format(cnt) for cnt in row_sum]))
+            percent_table += '<{} {},{}\n'.format(sband, unit, ','.join(["{0:.1f}".format(prc) for prc in row_perc]))
+            console_perc += '{:>16} {}\n'.format('<{} {}'.format(sband, unit), ' '.join(['{:^12}'.format("{0:.2f}".format(prc)) for prc in row_perc]))
 
         # Write report
         reportname = path.join(report_location, "{}_{}.csv".format('Summary', now))
@@ -405,15 +426,30 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
             report.write('\n')
             report.write(inc_type_report)
             report.write('\n')
+            report.write(counts_title)
             report.write(counts_header)
             report.write(counts_table)
             report.write('\n')
+            report.write(percent_title)
             report.write(percent_header)
             report.write(percent_table)
 
         arcpy.SetParameterAsText(9, path.join(out_lines_dir, out_lines_name))
-        arcpy.AddMessage("View incident summary report: {}".format(reportname))
+        arcpy.AddMessage("\nView incident summary report: {}\n".format(reportname))
 
+        arcpy.AddMessage(report_header)
+        arcpy.AddMessage('')
+        arcpy.AddMessage(data_info)
+        arcpy.AddMessage('')
+        arcpy.AddMessage(console_type_rpt)
+        arcpy.AddMessage('')
+        arcpy.AddMessage(counts_title)
+        arcpy.AddMessage(console_counts_header)
+        arcpy.AddMessage(console_count)
+        arcpy.AddMessage('')
+        arcpy.AddMessage(percent_title)
+        arcpy.AddMessage(console_perc_header)
+        arcpy.AddMessage(console_perc)
 
     except arcpy.ExecuteError:
         # Get the tool error messages
