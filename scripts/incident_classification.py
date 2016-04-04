@@ -228,6 +228,10 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
                   spatial_band_field, temporal_band_field, date_field,
                   z_value_field, 'SHAPE@X', 'SHAPE@Y']
 
+        # Value lists for half life calculations
+        all_distances = []
+        all_lives = []
+
         # Prepare to insert line features
         new_lines = []
 
@@ -261,6 +265,10 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
 
                     # Calculate days between incidents
                     datediff = incident_date - odate
+
+                    # Save distance values
+                    all_lives.append(datediff.days)
+                    all_distances.append(nearfeat[2])
 
                     # Classify spatial band
                     nearfeat[4] = calculate_band(nearfeat[2], spatial_bands)
@@ -346,11 +354,18 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
         except KeyError:
             unit = ''
 
+        # Get half-life and half-distance
+        all_distances.sort()
+        half_distance = all_distances[int(len(all_distances)/2)]
+
+        all_lives.sort()
+        half_life = all_lives[int(len(all_lives)/2)]
+
 
         # Build report content
-        perc_o = "{0:.1f}".format(100.0*float(orig_cnt)/inc_cnt)
-        perc_nr = "{0:.1f}".format(100.0*float(nrpt_cnt)/inc_cnt)
-        perc_r = "{0:.1f}".format(100.0*float(rpt_cnt)/inc_cnt)
+        perc_o = "{:.1f}".format(100.0*float(orig_cnt)/inc_cnt)
+        perc_nr = "{:.1f}".format(100.0*float(nrpt_cnt)/inc_cnt)
+        perc_r = "{:.1f}".format(100.0*float(rpt_cnt)/inc_cnt)
 
         report_header = ('Repeat and Near Repeat Incident Summary\n'
                          'Created {}\n'.format(now_nice))
@@ -376,6 +391,14 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
                                                                   orig_cnt, perc_o,
                                                                   nrpt_cnt, perc_nr,
                                                                   rpt_cnt, perc_r))
+
+        half_values = ('Estimated incident half-life, {:.1f}\n'
+                       'Estimated incident half-distance, {:.1f}\n'.format(half_life,
+                                                                     half_distance))
+
+        console_halves = ('Estimated incident half-life: {:.1f}\n'
+                          'Estimated incident half-distance: {:.1f}\n'.format(half_life,
+                                                                     half_distance))
 
         temp_band_strs = ["<{} days".format(b) for b in temporal_bands]
         temporal_band_labels = ','.join(temp_band_strs)
@@ -413,8 +436,8 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
             # append counts & percentages to the table
             counts_table += '<{} {},{}\n'.format(sband, unit, ','.join([str(cnt) for cnt in row_sum]))
             console_count += '{:>16} {}\n'.format('<{} {}'.format(sband, unit), ' '.join(['{:^12}'.format(cnt) for cnt in row_sum]))
-            percent_table += '<{} {},{}\n'.format(sband, unit, ','.join(["{0:.1f}".format(prc) for prc in row_perc]))
-            console_perc += '{:>16} {}\n'.format('<{} {}'.format(sband, unit), ' '.join(['{:^12}'.format("{0:.2f}".format(prc)) for prc in row_perc]))
+            percent_table += '<{} {},{}\n'.format(sband, unit, ','.join(["{:.1f}".format(prc) for prc in row_perc]))
+            console_perc += '{:>16} {}\n'.format('<{} {}'.format(sband, unit), ' '.join(['{:^12}'.format("{:.1f}".format(prc)) for prc in row_perc]))
 
         # Write report
         reportname = path.join(report_location, "{}_{}.csv".format('Summary', now))
@@ -424,6 +447,8 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
             report.write('\n')
             report.write(data_info)
             report.write('\n')
+            report.write(half_values)
+            report.write('n')
             report.write(inc_type_report)
             report.write('\n')
             report.write(counts_title)
@@ -440,6 +465,8 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
         arcpy.AddMessage(report_header)
         arcpy.AddMessage('')
         arcpy.AddMessage(data_info)
+        arcpy.AddMessage('')
+        arcpy.AddMessage(console_halves)
         arcpy.AddMessage('')
         arcpy.AddMessage(console_type_rpt)
         arcpy.AddMessage('')
