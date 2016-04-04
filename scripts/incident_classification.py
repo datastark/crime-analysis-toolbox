@@ -229,8 +229,13 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
                   z_value_field, 'SHAPE@X', 'SHAPE@Y']
 
         # Value lists for half life calculations
-        all_distances = []
-        all_lives = []
+        all_distances = {}
+        for sband in spatial_bands:
+            all_distances[sband] = []
+
+        all_lives = {}
+        for tband in temporal_bands:
+            all_lives[tband] = []
 
         # Prepare to insert line features
         new_lines = []
@@ -266,15 +271,15 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
                     # Calculate days between incidents
                     datediff = incident_date - odate
 
-                    # Save distance values
-                    all_lives.append(datediff.days)
-                    all_distances.append(nearfeat[2])
-
                     # Classify spatial band
                     nearfeat[4] = calculate_band(nearfeat[2], spatial_bands)
 
                     # Classify temporal band
                     nearfeat[5] = calculate_band(datediff.days, temporal_bands)
+
+                    # Save distance values
+                    all_lives[nearfeat[5]].append(datediff.days)
+                    all_distances[nearfeat[4]].append(nearfeat[2])
 
                     # Save to identify ultimate origin features
                     oids.append(oid)
@@ -355,11 +360,19 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
             unit = ''
 
         # Get half-life and half-distance
-        all_distances.sort()
-        half_distance = all_distances[int(len(all_distances)/2)]
+        test_distances = []
+        half_distances = {}
+        for sband in spatial_bands:
+            test_distances.extend(all_distances[sband])
+            test_distances.sort()
+            half_distances[sband] = test_distances[int(len(test_distances)/2)]
 
-        all_lives.sort()
-        half_life = all_lives[int(len(all_lives)/2)]
+        test_lives = []
+        half_lives = {}
+        for tband in temporal_bands:
+            test_lives.extend(all_lives[tband])
+            test_lives.sort()
+            half_lives[tband] = test_lives[int(len(test_lives)/2)]
 
 
         # Build report content
@@ -392,13 +405,17 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
                                                                   nrpt_cnt, perc_nr,
                                                                   rpt_cnt, perc_r))
 
-        half_values = ('Estimated incident half-life, {:.1f}\n'
-                       'Estimated incident half-distance, {:.1f}\n'.format(half_life,
-                                                                     half_distance))
+        half_lives_str = 'Estimated incident half-life\n'
+        half_lives_str_console = 'Estimated incident half-life\n'
+        for tband in temporal_bands:
+            half_lives_str += '{} days temporal band, {:.1f} days\n'.format(tband, half_lives[tband])
+            half_lives_str_console += '{} days temporal band: {:.1f} days\n'.format(tband, half_lives[tband])
 
-        console_halves = ('Estimated incident half-life: {:.1f}\n'
-                          'Estimated incident half-distance: {:.1f}\n'.format(half_life,
-                                                                     half_distance))
+        half_distance_str = 'Estimated incident half-distance\n'
+        half_distance_str_console = 'Estimated incident half-distance\n'
+        for sband in spatial_bands[1:]:
+            half_distance_str += '{0} {1} spatial band, {2:.1f} {1}\n'.format(sband, unit, half_distances[sband])
+            half_distance_str_console += '{0} {1} spatial band: {2:.1f} {1}\n'.format(sband, unit, half_distances[sband])
 
         temp_band_strs = ["<{} days".format(b) for b in temporal_bands]
         temporal_band_labels = ','.join(temp_band_strs)
@@ -447,8 +464,10 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
             report.write('\n')
             report.write(data_info)
             report.write('\n')
-            report.write(half_values)
-            report.write('n')
+            report.write(half_distance_str)
+            report.write('\n')
+            report.write(half_lives_str)
+            report.write('\n')
             report.write(inc_type_report)
             report.write('\n')
             report.write(counts_title)
@@ -466,7 +485,9 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
         arcpy.AddMessage('')
         arcpy.AddMessage(data_info)
         arcpy.AddMessage('')
-        arcpy.AddMessage(console_halves)
+        arcpy.AddMessage(half_distance_str_console)
+        arcpy.AddMessage('')
+        arcpy.AddMessage(half_lives_str_console)
         arcpy.AddMessage('')
         arcpy.AddMessage(console_type_rpt)
         arcpy.AddMessage('')
