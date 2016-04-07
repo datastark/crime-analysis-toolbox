@@ -146,6 +146,11 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
        out_lines_name: The name of the feature class that will be created to
                        hold the line features."""
     try:
+        # Fix for potential issue with xlsx files as report locations
+        ext = report_location.split['.'][-1]
+        if ext in ['xlsx', 'xls']:
+            report_location = path.dirname(report_location)
+
         # Build sorted lists of band values
         spatial_bands = [float(b) for b in spatial_bands.split(';')]
         temporal_bands = [float(b) for b in temporal_bands.split(';')]
