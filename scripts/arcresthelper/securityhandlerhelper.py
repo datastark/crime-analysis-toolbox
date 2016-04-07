@@ -1,15 +1,14 @@
 from __future__ import print_function
-from __future__ import absolute_import
-
 
 from arcrest import security
 import arcrest
 from arcrest.manageags import AGSAdministration
 from arcrest.manageorg import Administration
-from .packages import six
-from .packages.six.moves.urllib.error import HTTPError
+from packages import six
+import packages.six.moves.urllib as urllib
+from packages.six.moves.urllib.error import HTTPError
 import os
-from . import common
+import common
 import copy
 
 ########################################################################

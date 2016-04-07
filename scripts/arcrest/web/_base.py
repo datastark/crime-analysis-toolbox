@@ -24,15 +24,15 @@ try:
 except ImportError:
     from io import StringIO
 
-from ..constants import VERIFY_SSL_CERTIFICATES, USER_AGENT
 from ..packages.six.moves.urllib import request
 from ..packages.six.moves import http_cookiejar as cookiejar
 from ..packages.six.moves.urllib_parse import urlencode
-
+from ..packages.six.moves.urllib.error import HTTPError
 ########################################################################
-__version__ = "3.5.4"
+__version__ = "3.5.3"
 ########################################################################
-
+VERIFY_SSL_CERTIFICATES = True
+USER_AGENT = "python-requests/2.9.1"
 class BaseOperation(object):
     """base class for all objects"""
     _error = None
@@ -44,7 +44,7 @@ class BaseOperation(object):
                 init = getattr(self, "_" + self.__class__.__name__ + "__init", None)
                 if init is not None and callable(init):
                     init()
-            except Exception as e:
+            except Exception,e:
                 pass
         """gets the error"""
         return self._error
@@ -77,11 +77,7 @@ class MultiPartForm(object):
     boundary = None
     form_data = ""
     #----------------------------------------------------------------------
-    def __init__(self, param_dict=None, files=None):
-        if param_dict is None:
-            param_dict = {}
-        if files is None:
-            files = {}
+    def __init__(self, param_dict={}, files={}):
         self.boundary = None
         self.files = []
         self.form_data = ""
@@ -232,16 +228,15 @@ class BaseWebOperations(BaseOperation):
     @property
     def useragent(self):
         """gets/sets the user agent value"""
-        return USER_AGENT
+        return self._useragent
     #----------------------------------------------------------------------
     @useragent.setter
     def useragent(self, value):
         """gets/sets the user agent value"""
-        global USER_AGENT
         if value is None:
-            USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0"
+            self._useragent = "Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0"
         elif self._useragent != value:
-            USER_AGENT = value
+            self._useragent = value
     #----------------------------------------------------------------------
     def _get_file_name(self, contentDisposition,
                        url, ext=".unknown"):
@@ -369,10 +364,10 @@ class BaseWebOperations(BaseOperation):
                 yield chunk
     #----------------------------------------------------------------------
     def _post(self, url,
-              param_dict=None,
-              files=None,
+              param_dict={},
+              files={},
               securityHandler=None,
-              additional_headers=None,
+              additional_headers={},
               custom_handlers=[],
               proxy_url=None,
               proxy_port=80,
@@ -411,13 +406,6 @@ class BaseWebOperations(BaseOperation):
         Output:
            returns dictionary or string depending on web operation.
         """
-        if param_dict is None:
-            param_dict = {}
-        if files is None:
-            files = {}
-        if additional_headers is None:
-            additional_headers = {}
-
         if len(files) == 0 and force_form_post == False:
             self._last_method = "POST"
         elif len(files) == 0 and force_form_post == True:
@@ -449,36 +437,34 @@ class BaseWebOperations(BaseOperation):
         for k,v in additional_headers.items():
             headers[k] = v
             del k,v
-        hasContext = 'context' in getargspec(request.urlopen).args
+        opener = request.build_opener(*handlers)
+        request.install_opener(opener)
+        hasContext = 'content' in getargspec(request.urlopen).args
         if VERIFY_SSL_CERTIFICATES == False and \
-           hasContext:
+           'content' in getargspec(request.urlopen).args:
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
 
-        opener = request.build_opener(*handlers)
         opener.addheaders = [(k,v) for k,v in headers.items()]
-        request.install_opener(opener)
         if force_form_post == False:
             data = urlencode(param_dict)
             if self.PY3:
                 data = data.encode('ascii')
             opener.data = data
+            request.install_opener(opener)
             req = request.Request(self._asString(url),
-                                  data = data,
-                                  headers=headers)
-            for k,v in headers.items():
-                req.add_header(k,v)
+                                   data = data)
             if hasContext and VERIFY_SSL_CERTIFICATES == False:
-                resp = request.urlopen(req, context=ctx)
+                resp = request.urlopen(self._asString(url), data=data, context=ctx)
             else:
-                resp = request.urlopen(req)
+                resp = request.urlopen(self._asString(url), data=data)
         else:
             mpf = MultiPartForm(param_dict=param_dict,
                                 files=files)
-            req = request.Request(self._asString(url), headers=headers)
+            req = request.Request(self._asString(url))
             body = mpf.make_result
-            req.add_header('User-agent', USER_AGENT)
+            req.add_header('User-agent', self.useragent)
             req.add_header('Content-type', mpf.get_content_type())
             req.add_header('Content-length', len(body))
             req.data = body
@@ -525,9 +511,9 @@ class BaseWebOperations(BaseOperation):
             return value.encode('ascii')
     #----------------------------------------------------------------------
     def _get(self, url,
-             param_dict=None,
+             param_dict={},
              securityHandler=None,
-             additional_headers=None,
+             additional_headers=[],
              handlers=[],
              proxy_url=None,
              proxy_port=None,
@@ -542,25 +528,15 @@ class BaseWebOperations(BaseOperation):
         Output:
            returns dictionary, string or None
         """
-        if param_dict is None:
-            param_dict = {}
         self._last_method = "GET"
         CHUNK = 4056
         param_dict, handler, cj = self._processHandler(securityHandler, param_dict)
-        if additional_headers is not None:
-            headers = [] + additional_headers
-        else:
-            headers = []
-        pass_headers = {}
-        for h in headers:
-            pass_headers[h[0]] = h[1]
-
+        headers = [] + additional_headers
         if compress:
-            pass_headers['Accept-encoding'] = 'gzip'
+            headers.append(('Accept-encoding', 'gzip'))
         else:
-            pass_headers['Accept-encoding'] = ""
-        #headers.append(('User-Agent', USER_AGENT))
-        pass_headers['User-Agent'] = USER_AGENT
+            headers.append(('Accept-encoding', ''))
+        headers.append(('User-Agent', self.useragent))
         if len(param_dict.keys()) == 0:
             param_dict = None
         if handlers is None:
@@ -578,74 +554,56 @@ class BaseWebOperations(BaseOperation):
             proxy_support = request.ProxyHandler(proxies)
             handlers.append(proxy_support)
         opener = request.build_opener(*handlers)
-
-        opener.addheaders = headers
         request.install_opener(opener)
+        opener.addheaders = headers
         ctx = None
         hasContext = False
         if VERIFY_SSL_CERTIFICATES == False and \
-           'context' in getargspec(request.urlopen).args:
+           'content' in getargspec(request.urlopen).args:
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
             hasContext = True
-
         if hasContext == False:
-
             if param_dict is None:
-                req = request.Request(self._asString(url),
-                                      headers=pass_headers)
-                resp = request.urlopen(req)
+                resp = request.urlopen(self._asString(url), data=param_dict)
             elif len(str(urlencode(param_dict))) + len(url) >= 1999:
-                return self._post(
-                    url=url,
-                    param_dict=param_dict,
-                    files=None,
-                    securityHandler=securityHandler,
-                    additional_headers=additional_headers,
-                    custom_handlers=custom_handlers,
-                    proxy_url=proxy_url,
-                    proxy_port=proxy_port,
-                    compress=compress,
-                    out_folder=out_folder,
-                    file_name=file_name,
-                    force_form_post=False)
+                resp = request.urlopen(url=self._asString(url),
+                                       data=param_dict)
             else:
                 format_url = self._asString(url) + "?%s" % urlencode(param_dict)
-                req = request.Request(format_url,
-                                      headers=pass_headers)
-                resp = request.urlopen(req)
+                try:
+                    resp = request.urlopen(url=format_url)
+                except HTTPError as err:
+                    if err.code == 403:
+                        if url.startswith('http://'):
+                            url = url.replace('http://', 'https://')
+                            return self._get(url,
+                                     param_dict,
+                                     securityHandler,
+                                     additional_headers,
+                                     handlers,
+                                     proxy_url,
+                                     proxy_port,
+                                     compress,
+                                     custom_handlers,
+                                     out_folder,
+                                     file_name)
+
+                    else:
+                        raise err
+
         else:
             if param_dict is None:
-                req = request.Request(self._asString(url),
-                                      headers=pass_headers)
-                resp = request.urlopen(req,
+                resp = request.urlopen(self._asString(url), data=param_dict,
                                        context=ctx)
             elif len(str(urlencode(param_dict))) + len(url) >= 1999:
-                return self._post(
-                    url=url,
-                    param_dict=param_dict,
-                    files=None,
-                    securityHandler=securityHandler,
-                    additional_headers=additional_headers,
-                    custom_handlers=custom_handlers,
-                    proxy_url=proxy_url,
-                    proxy_port=proxy_port,
-                    compress=compress,
-                    out_folder=out_folder,
-                    file_name=file_name,
-                    force_form_post=False)
-                #req = request.Request(self._asString(url),
-                                      #data=param_dict,
-                                      #headers=pass_headers)
-                #resp = request.urlopen(req,
-                                       #data=param_dict,
-                                       #context=ctx)
+                resp = request.urlopen(url=self._asString(url),
+                                       data=param_dict,
+                                       context=ctx)
             else:
                 format_url = self._asString(url) + "?%s" % urlencode(param_dict)
-                req = request.Request(format_url,
-                                      headers=pass_headers)
-                resp = request.urlopen(req,
+                resp = request.urlopen(url=format_url,
                                        context=ctx)
         self._last_code = resp.getcode()
         self._last_url = resp.geturl()

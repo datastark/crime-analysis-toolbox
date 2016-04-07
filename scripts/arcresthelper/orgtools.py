@@ -1,8 +1,7 @@
 
 from __future__ import print_function
-from __future__ import absolute_import
 
-from .securityhandlerhelper import securityhandlerhelper
+from securityhandlerhelper import securityhandlerhelper
 
 dateTimeFormat = '%Y-%m-%d %H:%M'
 import arcrest
@@ -12,7 +11,7 @@ from arcrest.hostedservice import AdminFeatureService
 import datetime, time
 import json
 import os
-from . import common
+import common
 import gc
 
 #----------------------------------------------------------------------

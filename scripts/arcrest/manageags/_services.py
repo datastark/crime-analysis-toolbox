@@ -554,7 +554,6 @@ class Services(BaseAGSServer):
 ########################################################################
 class AGSService(BaseAGSServer):
     """ Defines a AGS Admin Service """
-    _frameworkProperties = None
     _proxy_port = None
     _proxy_url = None
     _securityHandler = None
@@ -694,13 +693,7 @@ class AGSService(BaseAGSServer):
         if self._jsonProperties is None:
             self.__init()
         return self._jsonProperties
-    #----------------------------------------------------------------------
-    @property
-    def frameworkProperties(self):
-        """returns the framework properties for an AGS instance"""
-        if self._frameworkProperties is None:
-            self.__init()
-        return self._frameworkProperties
+
     #----------------------------------------------------------------------
     @property
     def portalProperties(self):

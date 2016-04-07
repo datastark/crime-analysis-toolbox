@@ -13,8 +13,6 @@
 # limitations under the License.
 # -----------------------------------------------------------------------------
 
-# D:\CrimeAnalysis\testData.gdb\SpencerData newdates D:\CrimeAnalysis\output 1000;750;500;250 28;7;14;21 10 D:\CrimeAnalysis\testData.gdb connectiontest D:\CrimeAnalysis\testData.gdb\SpencerData
-
 # ==================================================
 # incident_classification.py BETA
 # --------------------------------------------------
