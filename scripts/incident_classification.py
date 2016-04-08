@@ -147,8 +147,7 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
                        hold the line features."""
     try:
         # Fix for potential issue with xlsx files as report locations
-        ext = report_location.split['.'][-1]
-        if ext in ['xlsx', 'xls']:
+        if not path.isdir(report_location):
             report_location = path.dirname(report_location)
 
         # Build sorted lists of band values
