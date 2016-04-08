@@ -256,6 +256,9 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
                 if not nearfeat[1]:
                     pass
 
+                elif fid in oids and oid in rnrids:
+                    pass
+
                 elif nearfeat[1] > 0:
 
                     # Get origin feature attributes
@@ -447,7 +450,10 @@ def classify_incidents(in_features, date_field, report_location, repeatdist,
             # Get spatial band count in each temporal band
             # Sums include counts from smaller bands
             row_counts = [vals[tband] for tband in temporal_bands]
-            row_sums = [sum(row_counts[0:i]) for i in xrange(1,len(row_counts)+1)]
+            try:
+                row_sums = [sum(row_counts[0:i]) for i in xrange(1,len(row_counts)+1)]
+            except:
+                row_sums = [sum(row_counts[0:i]) for i in range(1,len(row_counts)+1)]
 
             row_sum = [x + y for (x, y) in zip(row_sums, row_sum)]
             row_perc = [100.0 * float(val)/inc_cnt for val in row_sum]
